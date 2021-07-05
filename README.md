@@ -12,10 +12,7 @@ Unity packages:
 Can be added as package if Unity >= 2019.3.4f1, Unity >= 2020.1a21
 
 Other libraries:
-[For getting NuGet packages]
-- NuGetForUnity (https://github.com/GlitchEnzo/NuGetForUnity)
-[For csv files parsing]
-- FileHelpers (https://github.com/MarcosMeli/FileHelpers)
-[For better async/await integration for Unity]
-- UniTask (https://github.com/Cysharp/UniTask)
-Can be added as package if Unity >= 2019.3.4f1, Unity >= 2020.1a21
+- NuGetForUnity (https://github.com/GlitchEnzo/NuGetForUnity) [For getting NuGet packages]
+- FileHelpers (https://github.com/MarcosMeli/FileHelpers) [For csv files parsing]
+- UniTask (https://github.com/Cysharp/UniTask) [For better async/await integration for Unity. Can be added as package if Unity >= 2019.3.4f1, Unity >= 2020.1a21]
+
