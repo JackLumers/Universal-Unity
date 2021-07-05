@@ -12,7 +12,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             set
             {
                 _focused = value;
-                RayCastBlock("Unfocused", !value, true);
+                InteractionBlock("Unfocused", !value, true);
             }
         }
     }

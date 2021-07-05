@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Triggers;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,7 +18,7 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
     {
         private static readonly int MaterialColor = Shader.PropertyToID("_Color");
         
-        #region Public API IEnumerable
+        #region Public API
 
         /// <summary>
         /// Moves object to the <paramref name="targetPosition"/> with specified <paramref name="speedOrTime"/>
@@ -26,27 +27,33 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
         /// <para></para>
         /// You can change global or local position, defining <paramref name="isLocalPosition"/>
         /// </summary>
-        public static IEnumerator Move(Transform transform, Vector3 targetPosition,
+        public static async UniTask Move(Transform transform, Vector3 targetPosition,
             [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f, bool isLocalPosition = true,
-            bool fixedTime = true, [CanBeNull] Action onDone = null)
+            bool fixedTime = true, [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            switch (isLocalPosition)
-            {
-                case true:
-                    yield return LerpVectorByCurve
-                    (
-                        result => transform.localPosition = result,
-                        curve, transform.localPosition, targetPosition, speedOrTime, fixedTime, onDone
-                    );
-                    break;
-                default:
-                    yield return LerpVectorByCurve
-                    (
-                        result => transform.position = result,
-                        curve, transform.position, targetPosition, speedOrTime, fixedTime, onDone
-                    );
-                    break;
-            }
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                transform.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    switch (isLocalPosition)
+                    {
+                        case true:
+                            LerpVectorByCurve
+                            (
+                                result => transform.localPosition = result,
+                                curve, transform.localPosition, targetPosition, speedOrTime, fixedTime, onDone
+                            );
+                            break;
+                        default:
+                            LerpVectorByCurve
+                            (
+                                result => transform.position = result,
+                                curve, transform.position, targetPosition, speedOrTime, fixedTime, onDone
+                            );
+                            break;
+                    }
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
 
         /// <summary>
@@ -54,15 +61,21 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
         /// by starting coroutine on specified <see cref="MonoBehaviour"/>, using interpolating values
         /// from <see cref="AnimationCurve"/>.
         /// </summary>
-        public static IEnumerator MoveAnchored(RectTransform transform, Vector3 targetPosition,
+        public static async UniTask MoveAnchored(RectTransform transform, Vector3 targetPosition,
             [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f,
-            bool fixedTime = true, [CanBeNull] Action onDone = null)
+            bool fixedTime = true, [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpVectorByCurve
-            (
-                result => transform.anchoredPosition = result,
-                curve, transform.anchoredPosition, targetPosition, speedOrTime, fixedTime, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                transform.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    LerpVectorByCurve
+                    (
+                        result => transform.anchoredPosition = result,
+                        curve, transform.anchoredPosition, targetPosition, speedOrTime, fixedTime, onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
 
         /// <summary>
@@ -72,29 +85,36 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
         /// <para></para>
         /// You can change global or local rotation, defining <paramref name="isLocalRotation"/>
         /// </summary>
-        public static IEnumerator Rotate(Transform transform, Quaternion targetQuaternion,
+        public static async UniTask Rotate(Transform transform, Quaternion targetQuaternion,
             [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f, bool isLocalRotation = true,
-            bool fixedTime = true, [CanBeNull] Action onDone = null)
+            bool fixedTime = true, [CanBeNull] Action onDone = null, 
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            switch (isLocalRotation)
-            {
-                case true:
-                    yield return LerpQuarternionByCurve
-                    (
-                        result => transform.localRotation = result,
-                        curve, transform.localRotation, targetQuaternion, speedOrTime, fixedTime, onDone
-                    );
-                    break;
-                default:
-                    yield return LerpQuarternionByCurve
-                    (
-                        result => transform.rotation = result,
-                        curve, transform.rotation, targetQuaternion, speedOrTime, fixedTime, onDone
-                    );
-                    break;
-            }
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                transform.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    switch (isLocalRotation)
+                    {
+                        case true:
+                            LerpQuarternionByCurve
+                            (
+                                result => transform.localRotation = result,
+                                curve, transform.localRotation, targetQuaternion, speedOrTime, fixedTime, onDone
+                            );
+                            break;
+                        default:
+                            LerpQuarternionByCurve
+                            (
+                                result => transform.rotation = result,
+                                curve, transform.rotation, targetQuaternion, speedOrTime, fixedTime, onDone
+                            );
+                            break;
+                    }
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
-        
+
         /// <summary>
         /// Rotates object to the <paramref name="targetRotation"/> with specified <paramref name="speedOrTime"/>
         /// by starting coroutine on specified <see cref="MonoBehaviour"/>, using interpolating values
@@ -102,27 +122,35 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
         /// <para></para>
         /// You can change global or local rotation, defining <paramref name="isLocalRotation"/>
         /// </summary>
-        public static IEnumerator Rotate(Transform transform, Vector3 targetRotation,
+        public static async UniTask Rotate(Transform transform, Vector3 targetRotation,
             [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f, bool isLocalRotation = true,
-            bool fixedTime = true, [CanBeNull] Action onDone = null)
+            bool fixedTime = true, [CanBeNull] Action onDone = null,
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            switch (isLocalRotation)
-            {
-                case true:
-                    yield return LerpVectorAsRotationByCurve
-                    (
-                        result => transform.localRotation = Quaternion.Euler(result.x, result.y, result.z),
-                        curve, transform.localRotation.eulerAngles, targetRotation, speedOrTime, fixedTime, onDone
-                    );
-                    break;
-                default:
-                    yield return LerpVectorAsRotationByCurve
-                    (
-                        result => transform.rotation = Quaternion.Euler(result.x, result.y, result.z),
-                        curve, transform.rotation.eulerAngles, targetRotation, speedOrTime, fixedTime, onDone
-                    );
-                    break;
-            }
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                transform.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    switch (isLocalRotation)
+                    {
+                        case true:
+                            LerpVectorAsRotationByCurve
+                            (
+                                result => transform.localRotation = Quaternion.Euler(result.x, result.y, result.z),
+                                curve, transform.localRotation.eulerAngles, targetRotation, speedOrTime, fixedTime, onDone
+                            );
+                            break;
+                        default:
+                            LerpVectorAsRotationByCurve
+                            (
+                                result => transform.rotation = Quaternion.Euler(result.x, result.y, result.z),
+                                curve, transform.rotation.eulerAngles, targetRotation, speedOrTime, fixedTime, onDone
+                            );
+                            break;
+                    }
+                },
+                cancellationToken: cancellationTokenSource.Token);
+            
         }
 
         /// <summary>
@@ -130,194 +158,295 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
         /// by starting coroutine on specified <see cref="MonoBehaviour"/>, using interpolating values
         /// from <see cref="AnimationCurve"/>.
         /// </summary>
-        public static IEnumerator Scale(Transform transform, Vector3 targetScale,
-            [CanBeNull] AnimationCurve animationCurve = null, float speedOrTime = 1f, bool fixedTime = true, [CanBeNull] Action onDone = null)
+        public static async UniTask Scale(Transform transform, Vector3 targetScale,
+            [CanBeNull] AnimationCurve animationCurve = null, float speedOrTime = 1f, bool fixedTime = true,
+            [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpVectorByCurve
-            (
-                result => transform.localScale = result, animationCurve, transform.localScale, targetScale, speedOrTime,
-                fixedTime, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                transform.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    LerpVectorByCurve
+                    (
+                        result => transform.localScale = result, animationCurve, transform.localScale, targetScale, speedOrTime,
+                        fixedTime, onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
 
         /// <summary>
         /// Changes graphic's alpha to the <paramref name="targetAlpha"/> with specified <paramref name="speedOrTime"/>
         /// by starting coroutine on specified <see cref="MonoBehaviour"/>, using interpolating values
         /// </summary>
-        public static IEnumerator Fade(MaskableGraphic graphic, float targetAlpha,
-            [CanBeNull] AnimationCurve animationCurve = null, float speedOrTime = 1f, bool fixedTime = true, [CanBeNull] Action onDone = null)
+        public static async UniTask Fade(MaskableGraphic graphic, float targetAlpha,
+            [CanBeNull] AnimationCurve animationCurve = null, float speedOrTime = 1f, bool fixedTime = true,
+            [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpFloatByCurve
-            (
-                result =>
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                graphic.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
                 {
-                    Color originalColor = graphic.color;
-                    graphic.color = new Color(originalColor.r, originalColor.g, originalColor.b, result);
+                    LerpFloatByCurve
+                    (
+                        result =>
+                        {
+                            Color originalColor = graphic.color;
+                            graphic.color = new Color(originalColor.r, originalColor.g, originalColor.b, result);
+                        },
+                        animationCurve, graphic.color.a, targetAlpha, speedOrTime, fixedTime, onDone
+                    );
                 },
-                animationCurve, graphic.color.a, targetAlpha, speedOrTime, fixedTime, onDone
-            );
+                cancellationToken: cancellationTokenSource.Token);
         }
 
         /// <summary>
         /// Changes graphic's color to the <paramref name="targetColor"/> with specified <paramref name="speedOrTime"/>
         /// by starting coroutine on specified <see cref="MonoBehaviour"/>, using interpolating values
         /// </summary>
-        public static IEnumerator Recolor(MaskableGraphic graphic, Color targetColor,
-            [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f, bool fixedTime = true, [CanBeNull] Action onDone = null)
+        public static async UniTask Recolor(MaskableGraphic graphic, Color targetColor,
+            [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f, bool fixedTime = true,
+            [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpColorByCurve
-            (
-                result => graphic.color = result, curve, graphic.color, targetColor, speedOrTime, fixedTime, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                graphic.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    LerpColorByCurve
+                    (
+                        result => graphic.color = result, curve, graphic.color, targetColor, speedOrTime, fixedTime, onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
-        
+
         /// <summary>
         /// Changes graphic's color to the <paramref name="targetColor"/> with specified <paramref name="speedOrTime"/>
         /// by starting coroutine on specified <see cref="MonoBehaviour"/>, using interpolating values
         /// </summary>
-        public static IEnumerator Recolor(TextMesh textMesh, Color targetColor,
-            [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f, bool fixedTime = true, [CanBeNull] Action onDone = null)
+        public static async UniTask Recolor(TextMesh textMesh, Color targetColor,
+            [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f, bool fixedTime = true,
+            [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpColorByCurve
-            (
-                result => textMesh.color = result, curve, textMesh.color, targetColor, speedOrTime, fixedTime, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                textMesh.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    LerpColorByCurve
+                    (
+                        result => textMesh.color = result, curve, textMesh.color, targetColor, speedOrTime, fixedTime,
+                        onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
-        
+
         /// <summary>
         /// Changes graphic's color to the <paramref name="targetColor"/> with specified <paramref name="speedOrTime"/>
         /// by starting coroutine on specified <see cref="MonoBehaviour"/>, using interpolating values
         /// </summary>
-        public static IEnumerator Recolor(Material material, Color targetColor,
-            [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f, bool fixedTime = true, [CanBeNull] Action onDone = null)
+        public static async UniTask Recolor(Material material, Color targetColor,
+            [CanBeNull] AnimationCurve curve = null, float speedOrTime = 1f, bool fixedTime = true,
+            [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpColorByCurve
-            (
-                result => material.SetColor(MaterialColor, result), curve, material.color, targetColor, speedOrTime, fixedTime, onDone
-            );
+            await UniTask.Run(() =>
+                {
+                    LerpColorByCurve
+                    (
+                        result => material.SetColor(MaterialColor, result), curve, material.color, targetColor,
+                        speedOrTime,
+                        fixedTime, onDone
+                    );
+                },
+                cancellationToken: cancellationToken);
         }
 
-        public static IEnumerator LerpFloatByCurve(Action<float> variable, float startValue, float targetValue,
-            [CanBeNull] AnimationCurve curve = null, float timeOrSpeed = 1f, bool fixedTime = true, [CanBeNull] Action onDone = null)
+        public static async UniTask LerpFloatByCurve(Action<float> variable, float startValue, float targetValue,
+            [CanBeNull] AnimationCurve curve = null, float timeOrSpeed = 1f, bool fixedTime = true,
+            [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpFloatByCurve
-            (
-                variable, curve, startValue, targetValue, timeOrSpeed, fixedTime, onDone
-            );
+            await UniTask.Run(() =>
+                {
+                    LerpFloatByCurve
+                    (
+                        variable, curve, startValue, targetValue, timeOrSpeed, fixedTime, onDone
+                    );
+                },
+                cancellationToken: cancellationToken);
         }
 
-        public static IEnumerator ChangeTextNumber(Text textObject, float startValue, float targetValue,
-            float timeInSeconds = 1.0f, [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null)
+        public static async UniTask ChangeTextNumber(Text textObject, float startValue, float targetValue,
+            float timeInSeconds = 1.0f, [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null,
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpFloatByCurve
-            (
-                result => textObject.text = result.ToString(CultureInfo.InvariantCulture),
-                curve, startValue, targetValue, timeInSeconds, true, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                textObject.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    LerpFloatByCurve
+                    (
+                        result => textObject.text = result.ToString(CultureInfo.InvariantCulture),
+                        curve, startValue, targetValue, timeInSeconds, true, onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
 
-        public static IEnumerator AnimateImgFill(Image imageObject, float startValue, float targetValue,
-            float timeInSeconds = 1.0f, [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null)
+        public static async UniTask AnimateImgFill(Image imageObject, float startValue, float targetValue,
+            float timeInSeconds = 1.0f, [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null,
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpFloatByCurve
-            (
-                result => imageObject.fillAmount = result,
-                curve, startValue, targetValue, timeInSeconds, true, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                imageObject.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    LerpFloatByCurve
+                    (
+                        result => imageObject.fillAmount = result,
+                        curve, startValue, targetValue, timeInSeconds, true, onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
 
-        public static IEnumerator AnimateSliderFill(Slider targetObject, float startValue, float targetValue,
-            float timeInSeconds = 1.0f, [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null)
+        public static async UniTask AnimateSliderFill(Slider targetObject, float startValue, float targetValue,
+            float timeInSeconds = 1.0f, [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null,
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpFloatByCurve
-            (
-                result => targetObject.value = result,
-                curve, startValue, targetValue, timeInSeconds, true, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                targetObject.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    LerpFloatByCurve
+                    (
+                        result => targetObject.value = result,
+                        curve, startValue, targetValue, timeInSeconds, true, onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
 
-        [SuppressMessage("ReSharper", "Unity.InefficientPropertyAccess")]
-        public static IEnumerator FlipUiElement(RectTransform target, Vector3 rotationAxis, float timeInSeconds = 1.0f,
-            [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null)
+        public static async UniTask FlipUiElement(RectTransform target, Vector3 rotationAxis,
+            float timeInSeconds = 1.0f,
+            [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null,
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            Vector3 end1 = rotationAxis * 90f;
-            Vector3 end2 = rotationAxis * 0f;
-            yield return LerpQuarternionByCurve
-            (
-                result => target.localRotation = result,
-                curve, target.localRotation, Quaternion.Euler(end1.x, end1.y, end1.z), timeInSeconds, true, onDone
-            );
-            yield return LerpQuarternionByCurve
-            (
-                result => target.localRotation = result,
-                curve, target.localRotation, Quaternion.Euler(end2.x, end2.y, end2.z), timeInSeconds, true, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                target.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    Vector3 end1 = rotationAxis * 90f;
+                    Vector3 end2 = rotationAxis * 0f;
+                    LerpQuarternionByCurve
+                    (
+                        result => target.localRotation = result,
+                        curve, target.localRotation, Quaternion.Euler(end1.x, end1.y, end1.z), timeInSeconds, true,
+                        onDone
+                    );
+                    LerpQuarternionByCurve
+                    (
+                        result => target.localRotation = result,
+                        curve, target.localRotation, Quaternion.Euler(end2.x, end2.y, end2.z), timeInSeconds, true,
+                        onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
 
-        public static IEnumerator FlipObject(Transform target, Vector3 rotationAxis, float timeInSeconds = 1.0f,
-            [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null)
+        public static async UniTask FlipObject(Transform target, Vector3 rotationAxis, float timeInSeconds = 1.0f,
+            [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null,
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            Vector3 end = rotationAxis * 180f;
-            yield return LerpQuarternionByCurve
-            (
-                result => target.localRotation = result,
-                curve, target.localRotation, Quaternion.Euler(end.x, end.y, end.z), timeInSeconds, true, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                target.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    Vector3 end = rotationAxis * 180f;
+                    LerpQuarternionByCurve
+                    (
+                        result => target.localRotation = result,
+                        curve, target.localRotation, Quaternion.Euler(end.x, end.y, end.z), timeInSeconds, true, onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
 
-        [SuppressMessage("ReSharper", "Unity.InefficientPropertyAccess")]
-        public static IEnumerator Pulse(Transform target, Vector3 startScale, Vector3 maxScale,
-            float timeInSeconds = 1.0f, float delayTimeInSeconds = 0.2f, [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null)
+        public static async UniTask Pulse(Transform target, Vector3 startScale, Vector3 maxScale,
+            float timeInSeconds = 1.0f, float delayTime = 0.2f, [CanBeNull] AnimationCurve curve = null,
+            [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpVectorByCurve
-            (
-                result => target.localScale = result, curve, target.localScale, maxScale,
-                timeInSeconds,
-                true, onDone
-            );
-            yield return new WaitForSeconds(delayTimeInSeconds);
-            yield return LerpVectorByCurve
-            (
-                result => target.localScale = result, curve, target.localScale, startScale,
-                timeInSeconds,
-                true, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                target.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+            {
+                LerpVectorByCurve
+                (
+                    result => target.localScale = result, curve, target.localScale, maxScale,
+                    timeInSeconds,
+                    true, onDone
+                );
+
+                UniTask.Delay(TimeSpan.FromSeconds(delayTime), cancellationToken: cancellationToken);
+
+                LerpVectorByCurve
+                (
+                    result => target.localScale = result, curve, target.localScale, startScale,
+                    timeInSeconds,
+                    true, onDone
+                );
+            }, cancellationToken: cancellationTokenSource.Token);
         }
 
-        public static IEnumerator ImageBlink(MaskableGraphic targetObject, Color startColor, Color targetColor,
-            float timeInSeconds = 1.0f, float delayTime = 0.2f, [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null)
+        public static async UniTask ImageBlink(MaskableGraphic targetObject, Color startColor, Color targetColor,
+            float timeInSeconds = 1.0f, float delayTime = 0.2f, [CanBeNull] AnimationCurve curve = null,
+            [CanBeNull] Action onDone = null, CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpColorByCurve
-            (
-                result => targetObject.color = result, curve, startColor, targetColor, timeInSeconds, true, onDone
-            );
-            yield return new WaitForSeconds(delayTime);
-            yield return LerpColorByCurve
-            (
-                result => targetObject.color = result, curve, targetColor, startColor, timeInSeconds, true, onDone
-            );
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,
+                targetObject.GetCancellationTokenOnDestroy());
+            await UniTask.Run(() =>
+                {
+                    LerpColorByCurve
+                    (
+                        result => targetObject.color = result, curve, startColor, targetColor, timeInSeconds, true,
+                        onDone
+                    );
+
+                    UniTask.Delay(TimeSpan.FromSeconds(delayTime), cancellationToken: cancellationToken);
+
+                    LerpColorByCurve
+                    (
+                        result => targetObject.color = result, curve, targetColor, startColor, timeInSeconds, true,
+                        onDone
+                    );
+                },
+                cancellationToken: cancellationTokenSource.Token);
         }
 
-        public static IEnumerator MaterialBlink(Material targetObject, Color startColor, Color targetColor,
+        public static async UniTask MaterialBlink(Material targetObject, Color startColor, Color targetColor,
             float timeInSeconds = 1.0f, float delayTime = 0.2f, string colorPropertyName = "_Color",
-            [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null)
+            [CanBeNull] AnimationCurve curve = null, [CanBeNull] Action onDone = null,
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            yield return LerpColorByCurve(
-                result => targetObject.SetColor(colorPropertyName, result),
-                curve, startColor, targetColor, timeInSeconds, true, onDone);
+            await UniTask.Run(() =>
+                {
+                    LerpColorByCurve(
+                        result => targetObject.SetColor(colorPropertyName, result),
+                        curve, startColor, targetColor, timeInSeconds, true, onDone);
 
-            yield return new WaitForSeconds(timeInSeconds * delayTime);
+                    UniTask.Delay(TimeSpan.FromSeconds(delayTime), cancellationToken: cancellationToken);
 
-            yield return LerpColorByCurve(
-                result => targetObject.SetColor(colorPropertyName, result),
-                curve, targetColor, startColor, timeInSeconds, true, onDone);
+                    LerpColorByCurve(
+                        result => targetObject.SetColor(colorPropertyName, result),
+                        curve, targetColor, startColor, timeInSeconds, true, onDone);
+                },
+                cancellationToken: cancellationToken);
         }
 
         #endregion
 
         #region Private Tweek Methods
 
-        private static IEnumerator LerpFloatByCurve(Action<float> variable, [CanBeNull] AnimationCurve curve,
+        private static async void LerpFloatByCurve(Action<float> variable, [CanBeNull] AnimationCurve curve,
             float startValue,
             float targetValue, float timeOrSpeed, bool fixedTime, [CanBeNull] Action onDone)
         {
@@ -331,7 +460,7 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                     {
                         variable(targetValue); 
                         onDone?.Invoke();
-                        yield break;
+                        break;
                     }
                     if (!startValue.Equals(targetValue))
                     {
@@ -341,12 +470,12 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Mathf.LerpUnclamped(startValue, targetValue, curve.Evaluate(step));
                             variable(interpolatedValue);
                             step += Time.deltaTime / timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
                     variable(targetValue);
                     onDone?.Invoke();
-                    yield break;
+                    break;
                 
                 case false:
                     CheckSpeed(timeOrSpeed);
@@ -358,16 +487,17 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Mathf.LerpUnclamped(startValue, targetValue, curve.Evaluate(step));
                             variable(interpolatedValue);
                             step += Time.deltaTime * timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+                            
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
                     variable(targetValue);
                     onDone?.Invoke();
-                    yield break;
+                    break;
             }
         }
 
-        private static IEnumerator LerpVectorByCurve(Action<Vector3> variable, [CanBeNull] AnimationCurve curve,
+        private static async void LerpVectorByCurve(Action<Vector3> variable, [CanBeNull] AnimationCurve curve,
             Vector3 startVector, Vector3 targetVector, float timeOrSpeed, bool fixedTime, [CanBeNull] Action onDone)
         {
             if (ReferenceEquals(curve, null)) curve = DefaultCurve;
@@ -380,8 +510,9 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                     {
                         variable(targetVector);
                         onDone?.Invoke();
-                        yield break;
+                        break;
                     }
+
                     if (!Equals(startVector, targetVector))
                     {
                         while (step <= 1)
@@ -390,13 +521,15 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Vector3.LerpUnclamped(startVector, targetVector, curve.Evaluate(step));
                             variable(interpolatedValue);
                             step += Time.deltaTime / timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
+
                     variable(targetVector);
                     onDone?.Invoke();
-                    yield break;
-                
+                    break;
+
                 case false:
                     CheckSpeed(timeOrSpeed);
                     if (!Equals(startVector, targetVector))
@@ -407,16 +540,20 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Vector3.LerpUnclamped(startVector, targetVector, curve.Evaluate(step));
                             variable(interpolatedValue);
                             step += Time.deltaTime * timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
+
                     variable(targetVector);
                     onDone?.Invoke();
-                    yield break;
+                    break;
             }
         }
-        
-        private static IEnumerator LerpVectorAsRotationByCurve(Action<Vector3> variable, [CanBeNull] AnimationCurve curve,
+
+
+        private static async void LerpVectorAsRotationByCurve(Action<Vector3> variable,
+            [CanBeNull] AnimationCurve curve,
             Vector3 startVector, Vector3 targetVector, float timeOrSpeed, bool fixedTime, [CanBeNull] Action onDone)
         {
             if (ReferenceEquals(curve, null)) curve = DefaultCurve;
@@ -429,8 +566,9 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                     {
                         variable(targetVector);
                         onDone?.Invoke();
-                        yield break;
+                        break;
                     }
+
                     if (!Equals(startVector, targetVector))
                     {
                         while (step <= 1)
@@ -439,13 +577,14 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Vector3.LerpUnclamped(startVector, targetVector, curve.Evaluate(step));
                             variable(ClampVector(interpolatedValue));
                             step += Time.deltaTime / timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
+
                     variable(targetVector);
                     onDone?.Invoke();
-                    yield break;
-                
+                    break;
+
                 case false:
                     CheckSpeed(timeOrSpeed);
                     if (!Equals(startVector, targetVector))
@@ -456,17 +595,19 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Vector3.LerpUnclamped(startVector, targetVector, curve.Evaluate(step));
                             variable(ClampVector(interpolatedValue));
                             step += Time.deltaTime * timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
+
                     variable(targetVector);
                     onDone?.Invoke();
-                    yield break;
+                    break;
             }
 
             Vector3 ClampVector(Vector3 vector)
             {
-                return new Vector3(ClampFullRotation(vector.x), ClampFullRotation(vector.y), ClampFullRotation(vector.z));
+                return new Vector3(ClampFullRotation(vector.x), ClampFullRotation(vector.y),
+                    ClampFullRotation(vector.z));
             }
 
             float ClampFullRotation(float value)
@@ -485,8 +626,8 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                 return value;
             }
         }
-
-        private static IEnumerator LerpQuarternionByCurve(Action<Quaternion> variable, [CanBeNull] AnimationCurve curve,
+        
+        private static async void LerpQuarternionByCurve(Action<Quaternion> variable, [CanBeNull] AnimationCurve curve,
             Quaternion startQuaternion, Quaternion targetQuaternion, float timeOrSpeed, bool fixedTime, [CanBeNull] Action onDone)
         {
             if (ReferenceEquals(curve, null)) curve = DefaultCurve;
@@ -499,7 +640,7 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                     {
                         variable(targetQuaternion);
                         onDone?.Invoke();
-                        yield break;
+                        break;
                     }
                     if (!Equals(startQuaternion, targetQuaternion))
                     {
@@ -509,12 +650,12 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Quaternion.LerpUnclamped(startQuaternion, targetQuaternion, curve.Evaluate(step));
                             variable(interpolatedValue);
                             step += Time.deltaTime / timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
                     variable(targetQuaternion);
                     onDone?.Invoke();
-                    yield break;
+                    break;
                 
                 case false:
                     CheckSpeed(timeOrSpeed);
@@ -526,16 +667,16 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Quaternion.LerpUnclamped(startQuaternion, targetQuaternion, curve.Evaluate(step));
                             variable(interpolatedValue);
                             step += Time.deltaTime * timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
                     variable(targetQuaternion);
                     onDone?.Invoke();
-                    yield break;
+                    break;
             }
         }
 
-        private static IEnumerator LerpColorByCurve(Action<Color> variable, [CanBeNull] AnimationCurve curve,
+        private static async void LerpColorByCurve(Action<Color> variable, [CanBeNull] AnimationCurve curve,
             Color startColor,
             Color targetColor, float timeOrSpeed, bool fixedTime, [CanBeNull] Action onDone)
         {
@@ -548,8 +689,8 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                     if (timeOrSpeed.Equals(0))
                     {
                         variable(targetColor);
-                        onDone?.Invoke();
-                        yield break;
+                        onDone?.Invoke();  
+                        break;
                     }
                     if (!Equals(startColor, targetColor))
                     {
@@ -559,12 +700,12 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Color.LerpUnclamped(startColor, targetColor, curve.Evaluate(step));
                             variable(interpolatedValue);
                             step += Time.deltaTime / timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
                     variable(targetColor);
                     onDone?.Invoke();
-                    yield break;
+                    break;
                 case false:
                     CheckSpeed(timeOrSpeed);
                     if (!Equals(startColor, targetColor))
@@ -575,12 +716,12 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
                                 Color.LerpUnclamped(startColor, targetColor, curve.Evaluate(step));
                             variable(interpolatedValue);
                             step += Time.deltaTime * timeOrSpeed;
-                            yield return WaitForFixedUpdate;
+                            await UniTask.WaitForFixedUpdate();
                         }
                     }
                     variable(targetColor);
                     onDone?.Invoke();
-                    yield break;
+                   break;
             }
         }
 
@@ -589,7 +730,6 @@ namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
         #region Private Inner Methods And Fields
 
         private static readonly AnimationCurve DefaultCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
-        private static readonly YieldInstruction WaitForFixedUpdate = new WaitForFixedUpdate();
 
         /// <summary>
         /// Checks whether the curve fits or not.

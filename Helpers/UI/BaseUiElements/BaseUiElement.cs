@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Coroutines;
@@ -12,38 +14,30 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
 {
     /// <summary>
     /// Base class for all UI elements.
-    /// By using methods from this class, elements can be rotated, moved, enabled and disabled with animation.
     /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
+    [RequireComponent(typeof(Animator))]
     public class BaseUiElement : CachedMonoBehaviour
     {
-        [Header("= Base UI Element Fields =")] 
-        [SerializeField] protected float enableAnimationTime = 0.5f;
-        [Space]
-        
+        [Header("= Base UI Element Fields =")]
         protected CanvasGroup CanvasGroup;
 
-        protected Coroutine EnableCoroutine;
-        protected Coroutine DisableCoroutine;
+        protected Animator Animator;
 
-        protected Coroutine MovingCoroutine;
-        protected Coroutine AlphaCoroutine;
-        protected Coroutine RotationCoroutine;
-        protected Coroutine ScalingCoroutine;
+        public string enableTrigger = "enable";
+        public string disableTrigger = "disable";
 
+        protected CancellationTokenSource MovingCancellationTokenSource;
+        protected Coroutine AlphaChangeCancellationTokenSource;
+        protected Coroutine RotationCancellationTokenSource;
+        protected Coroutine ScalingCancellationTokenSource;
+        
         protected bool IsInitialized { get; private set; }
 
         public bool IsEnabled { get; protected set; }
         
         public bool WasEnabled { get; protected set; }
 
-        public float EnableAnimationTime
-        {
-            get => enableAnimationTime;
-            set => enableAnimationTime = value;
-        }
-
-        
         private void Awake()
         {
             if(!IsInitialized) InitComponents();
@@ -54,6 +48,37 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         {
         }
 
+        /// <summary>
+        /// Called ONCE after <see cref="Awake"/> or in <see cref="Enable"/>, <see cref="Disable"/> methods, if was not called before.
+        /// Initialize here components or any other objects that is not changing references later.
+        /// <para>Must be called in inheritors before using any methods or fields!</para>
+        /// <remarks>Also can be called again if <see cref="DeInitAndRefresh"/> was called.</remarks>
+        /// </summary>
+        private void InitComponents(bool calledByEnable = false)
+        {
+            if (!IsInitialized)
+            {
+                CanvasGroup = GetComponent<CanvasGroup>();
+                Animator = GetComponent<Animator>();
+                IsInitialized = true;
+                
+                InheritInitComponents();
+                
+                if (!calledByEnable && !WasEnabled && CanvasGroup.alpha > 0.99 && gameObject.activeInHierarchy) Enable();
+            }
+            else
+            {
+                Debug.LogWarning("[BaseUiElement] Already initialized! Call rejected.");
+            }
+        }
+
+        /// <summary>
+        /// Called after <see cref="InitComponents"/>. Use to write additional init logic.
+        /// </summary>
+        protected virtual void InheritInitComponents()
+        {
+        }
+        
         #region Raycast Block Logic
 
         private HashSet<string> _blockContexts = new HashSet<string>();
@@ -71,12 +96,12 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         }
 
         /// <summary>
-        /// Returns true if any context blocks raycast
+        /// Returns false if any context blocks raycast
         /// </summary>
         /// <returns></returns>
-        public bool IsRayCastBlocked()
+        public bool Interactable()
         {
-            return _blockContexts.Any();
+            return !_blockContexts.Any();
         }
 
         public bool CheckBlockContext(string context)
@@ -85,9 +110,9 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         }
 
         /// <summary>
-        /// Use to disable all click events on this item without changing button colors.
+        /// Use to disable all click events on this item.
         /// </summary>
-        public void RayCastBlock(string context, bool block, bool suppressWarnings = false)
+        public void InteractionBlock(string context, bool block, bool suppressWarnings = false)
         {
             if (!IsInitialized) InitComponents();
             if (block)
@@ -106,62 +131,10 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             }
 
             CanvasGroup.blocksRaycasts = !_blockContexts.Any();
-        }
-
-        public bool Interactable
-        {
-            get
-            {
-                if (!IsInitialized)
-                {
-                    InitComponents();
-                }
-
-                return CanvasGroup.interactable;
-            }
-            set
-            {
-                if (!IsInitialized)
-                {
-                    InitComponents();
-                }
-
-                CanvasGroup.interactable = value;
-            }
+            CanvasGroup.interactable = !_blockContexts.Any();
         }
 
         #endregion
-
-        /// <summary>
-        /// Called ONCE after <see cref="Awake"/> or in <see cref="Enable"/>, <see cref="Disable"/> methods, if was not called before.
-        /// Initialize here components or any other objects that is not changing references later.
-        /// <para>Must be called in inheritors before using any methods or fields!</para>
-        /// <remarks>Also can be called again if <see cref="DeInitAndRefresh"/> was called.</remarks>
-        /// </summary>
-        protected void InitComponents(bool calledByEnable = false)
-        {
-            if (!IsInitialized)
-            {
-                CanvasGroup = GetComponent<CanvasGroup>();
-                IsInitialized = true;
-                
-                InheritInitComponents();
-                
-                if (!calledByEnable && !WasEnabled && CanvasGroup.alpha > 0.99 && gameObject.activeInHierarchy) Enable();
-            }
-            else
-            {
-                Debug.LogWarning("[BaseUiElement] Already initialized! Call rejected.");
-            }
-        }
-
-        /// <summary>
-        /// Called after <see cref="InitComponents"/>. Use to write additional init logic.
-        /// </summary>
-        protected virtual void InheritInitComponents()
-        {
-
-        }
 
         /// <summary>
         /// Use to make element like in first load.
@@ -189,24 +162,39 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         {
             
         }
-
-        /// <summary>
-        /// Enables/Disables item with coroutine animation. Inheritors can modify this animations if needed.
-        /// <see cref="EnablingAnimation"/> and <see cref="DisablingAnimation"/>
-        /// </summary>
-        public virtual Coroutine Enable(bool enable, [CanBeNull] Action onDone = null,
+        
+        public void Enable(bool enable, [CanBeNull] Action onDone = null,
             bool forceSwitchBlockInput = true)
         {
-            return enable
-                ? Enable(onDone, forceSwitchBlockInput)
-                : Disable(onDone, forceSwitchBlockInput);
+            switch (enable)
+            {
+                case true:
+                    Enable(onDone, forceSwitchBlockInput);
+                    break;
+                case false:
+                    Disable(onDone, forceSwitchBlockInput);
+                    break;
+            }
+        }
+        
+        public void ForceEnable(bool enable)
+        {
+            switch (enable)
+            {
+                case true:
+                    ForceEnable();
+                    break;
+                case false:
+                    ForceDisable();
+                    break;
+            }
         }
 
         /// <summary>
-        /// Enables item with coroutine animation. Inheritors can modify this animations if needed.
+        /// Enables item with animation.
         /// <see cref="EnablingAnimation"/>
         /// </summary>
-        public virtual Coroutine Enable([CanBeNull]Action onEnabled = null, bool forceEnableInput = true)
+        public void Enable([CanBeNull]Action onEnabled = null, bool forceEnableInput = true)
         {
             if (!IsInitialized)
             {
@@ -222,46 +210,37 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
                 }
             }
             
-            if (DisableCoroutine != null) StopCoroutine(DisableCoroutine);
             gameObject.SetActive(true);
-            if(forceEnableInput) RayCastBlock("Disabled", false, true);
+            if(forceEnableInput) InteractionBlock("Disabled", false, true);
             IsEnabled = true;
-            EnableCoroutine = CoroutineHelper.RestartCoroutine(ref EnableCoroutine, EnablingAnimation(onEnabled), this);
-            return EnableCoroutine;
         }
 
         /// <summary>
         /// Disables item with coroutine animation. Inheritors can modify this animations if needed.
         /// <see cref="DisablingAnimation"/>
         /// </summary>
-        public virtual Coroutine Disable([CanBeNull]Action onDisabled = null, bool forceDisableInput = true)
+        public void Disable([CanBeNull]Action onDisabled = null, bool forceDisableInput = true)
         {
             if (!gameObject.activeInHierarchy)
             {
-                ForceDisable();
-                return null;
+                return;
             }
+            
             if (!IsInitialized) InitComponents();
-            if (EnableCoroutine != null) StopCoroutine(EnableCoroutine);
-            if(forceDisableInput) RayCastBlock("Disabled", true, true);
+            if(forceDisableInput) InteractionBlock("Disabled", true, true);
             IsEnabled = false;
-            DisableCoroutine = CoroutineHelper.RestartCoroutine(ref DisableCoroutine, DisablingAnimation(onDisabled), this);
-            return DisableCoroutine;
         }
-        
-        public void ForceDisable([CanBeNull]Action onDisabled = null)
+
+        public void ForceDisable()
         {
             if (!IsInitialized) InitComponents();
-            if (DisableCoroutine != null) StopCoroutine(DisableCoroutine);
-            if (EnableCoroutine != null) StopCoroutine(EnableCoroutine);
-            RayCastBlock("Disabled", true, true);
+            InteractionBlock("Disabled", true, true);
             IsEnabled = false;
             CanvasGroup.alpha = 0;
-            onDisabled?.Invoke();
             gameObject.SetActive(false);
         }
 
-        public void ForceEnable([CanBeNull]Action onEnabled = null)
+        public void ForceEnable()
         {
             if (!IsInitialized)
             {
@@ -273,47 +252,31 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
                 WasEnabled = true;
             }
             
-            if (DisableCoroutine != null) StopCoroutine(DisableCoroutine);
-            if (EnableCoroutine != null) StopCoroutine(EnableCoroutine);
             gameObject.SetActive(true);
-            RayCastBlock("Disabled", false, true);
+            InteractionBlock("Disabled", false, true);
             IsEnabled = true;
             CanvasGroup.alpha = 1;
+        }
+        
+        protected virtual void OnEnabled([CanBeNull]Action onEnabled)
+        {
+            InteractionBlock("Disabled", false, true);
             onEnabled?.Invoke();
         }
-
-        /// <summary>
-        /// Coroutine animation that used for enabling. Inheritors can modify this animations if needed.
-        /// </summary>
-        protected virtual IEnumerator EnablingAnimation([CanBeNull]Action onEnabled)
+        
+        protected virtual void OnDisabled([CanBeNull]Action onDisabled)
         {
-            yield return CurveAnimationHelper.LerpFloatByCurve(
-                result => CanvasGroup.alpha = result, CanvasGroup.alpha, 1, timeOrSpeed: enableAnimationTime);
-            RayCastBlock("Disabled", false, true);
-            onEnabled?.Invoke();
-        }
-
-        /// <summary>
-        /// Coroutine animation that used for disabling. Inheritors can modify this animations if needed.
-        /// </summary>
-        protected virtual IEnumerator DisablingAnimation([CanBeNull]Action onDisabled)
-        {
-            yield return CurveAnimationHelper.LerpFloatByCurve(
-                result => CanvasGroup.alpha = result, CanvasGroup.alpha, 0, timeOrSpeed: enableAnimationTime);
-            RayCastBlock("Disabled", true, true);
+            InteractionBlock("Disabled", true, true);
             onDisabled?.Invoke();
             gameObject.SetActive(false);
         }
 
-        public Coroutine Move(Vector3 targetLocalPosition, float timeOrSpeed, bool fixedTime, [CanBeNull] AnimationCurve curve)
+        public async UniTask Move(Vector3 targetLocalPosition, float timeOrSpeed, bool fixedTime, [CanBeNull] AnimationCurve curve)
         {
-            return CoroutineHelper.RestartCoroutine
-            (
-                ref MovingCoroutine,
-                CurveAnimationHelper.MoveAnchored((RectTransform)transform, targetLocalPosition, speedOrTime: timeOrSpeed,
-                    fixedTime: fixedTime, curve: curve),
-                this
-            );
+            
+            await CurveAnimationHelper.MoveAnchored((RectTransform) transform, targetLocalPosition,
+                speedOrTime: timeOrSpeed,
+                fixedTime: fixedTime, curve: curve).AttachExternalCancellation(MovingCancellationTokenSource.Token);
         }
 
         public Coroutine Rotate(Quaternion targetLocalRotation, float timeOrSpeed, bool fixedTime)
