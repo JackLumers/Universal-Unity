@@ -3,6 +3,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.Saves;
 using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
@@ -71,9 +72,8 @@ namespace UniversalUnity.Helpers.AudioManager
         {
             if (ReferenceEquals(secondAudioSource, null))
             {
-                LogHelper.LogHelper.Log("Can't play smooth without second source!", 
-                    MethodBase.GetCurrentMethod(),
-                    LogHelper.LogHelper.LogType.Error);
+                LogHelper.LogError("Can't play smooth without second source!", 
+                    nameof(PlaySmooth));
             }
             return CoroutineHelper.RestartCoroutine(ref _stopPlayingCoroutine, PlaySmoothProcess(clip, loop, changeTime),
                     this);

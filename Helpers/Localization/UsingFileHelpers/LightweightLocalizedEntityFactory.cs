@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Reflection;
 using UniversalUnity.Helpers.Localization.Enums;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.Parsing.UsingFileHelpers;
 
 namespace UniversalUnity.Helpers.Localization.UsingFileHelpers
@@ -31,8 +31,8 @@ namespace UniversalUnity.Helpers.Localization.UsingFileHelpers
                 switch (language)
                 {
                     case ETextLanguage.Undefined:
-                        LogHelper.LogHelper.Log("Cannot make lightweight entity due undefined localization.",
-                            MethodBase.GetCurrentMethod(), LogHelper.LogHelper.LogType.Error);
+                        LogHelper.LogWarning("Cannot make lightweight entity due undefined localization.",
+                            nameof(LocalizedLightweightEntity));
                         return;
                     case ETextLanguage.Russian:
                         Text = parsedEntity.RussianLocale;

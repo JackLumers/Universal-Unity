@@ -2,6 +2,7 @@
 using System.Reflection;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.UI.BaseUiElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
@@ -26,9 +27,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
         {
             if (durationInMillis < 0)
             {
-                LogHelper.LogHelper.Log("Argument out of range! Must be >= 0.",
-                    MethodBase.GetCurrentMethod(),
-                    LogHelper.LogHelper.LogType.Error);
+                LogHelper.LogError("Argument out of range! Must be >= 0.",
+                    nameof(StartTimer));
                 return null;
             }
 
@@ -46,7 +46,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
         private void HandleTimer([CanBeNull] Action onDone)
         {
             if (_destroyed) return;
-            LogHelper.LogHelper.Log("Timer done!", MethodBase.GetCurrentMethod());
+            LogHelper.LogInfo("Timer done!", nameof(HandleTimer));
             onDone?.Invoke();
         }
         

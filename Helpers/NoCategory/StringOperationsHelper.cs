@@ -2,6 +2,7 @@
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
+using UniversalUnity.Helpers.Logs;
 
 namespace UniversalUnity.Helpers.NoCategory
 {
@@ -57,9 +58,9 @@ namespace UniversalUnity.Helpers.NoCategory
                 textHeight += textField.lineSpacing * characterInfo.glyphHeight;
             }
             
-            LogHelper.LogHelper.Log($"Text height: {textHeight}", MethodBase.GetCurrentMethod());
-            LogHelper.LogHelper.Log($"TextField line spacing: {textField.lineSpacing}", MethodBase.GetCurrentMethod());
-            LogHelper.LogHelper.Log($"TextField line spacing: {textField.lineSpacing}", MethodBase.GetCurrentMethod());
+            LogHelper.LogInfo($"Text height: {textHeight}", nameof(GetStingMaxSizeToFitInField));
+            LogHelper.LogInfo($"TextField line spacing: {textField.lineSpacing}", nameof(GetStingMaxSizeToFitInField));
+            LogHelper.LogInfo($"TextField line spacing: {textField.lineSpacing}", nameof(GetStingMaxSizeToFitInField));
             return textSize;
         }
         

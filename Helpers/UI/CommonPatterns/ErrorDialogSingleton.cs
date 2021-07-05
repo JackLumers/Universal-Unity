@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
 using UniversalUnity.Helpers.Pooling.SimplePool;
 using UniversalUnity.Helpers.UI.BaseUiElements;
@@ -38,8 +39,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             }
             else
             {
-                LogHelper.LogHelper.Log($"Dialog with id '{dialogId}' already opened.", 
-                    MethodBase.GetCurrentMethod(), LogHelper.LogHelper.LogType.Warning);
+                LogHelper.LogWarning($"Dialog with id '{dialogId}' already opened.", 
+                    nameof(OpenNewDialog));
             }
             
             Instance.raycastBlockElement.Enable();
@@ -60,8 +61,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             }
             else
             {
-                LogHelper.LogHelper.Log($"Dialog with id '{dialogId}' already opened.", 
-                    MethodBase.GetCurrentMethod(), LogHelper.LogHelper.LogType.Error);
+                LogHelper.LogError($"Dialog with id '{dialogId}' already opened.", 
+                    nameof(OpenNewClosableDialog));
             }
             
             Instance.raycastBlockElement.Enable();

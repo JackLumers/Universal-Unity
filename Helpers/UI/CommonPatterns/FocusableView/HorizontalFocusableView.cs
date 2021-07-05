@@ -4,6 +4,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 using UniversalUnity.Helpers.UI.BaseUiElements;
 
@@ -55,8 +56,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             /* Checks */
             if (initialFocusIndex < 0)
             {
-                LogHelper.LogHelper.Log($"{nameof(initialFocusIndex)} Must be more than 0.",
-                    MethodBase.GetCurrentMethod(), LogHelper.LogHelper.LogType.Error);
+                LogHelper.LogError($"{nameof(initialFocusIndex)} Must be more than 0.",
+                    nameof(InheritAwake));
                 return;
             }
             
@@ -108,7 +109,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
         {
             if (childIndex < 0)
             {
-                LogHelper.LogHelper.Log($"{nameof(childIndex)} Must be more than 0.", MethodBase.GetCurrentMethod(), LogHelper.LogHelper.LogType.Error);
+                LogHelper.LogError($"{nameof(childIndex)} Must be more than 0.", nameof(Focus));
                 return null;
             }
             
@@ -186,7 +187,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             }
 
 
-            LogHelper.LogHelper.Log($"Can't focus, no elements in this direction. Right: {right}.", MethodBase.GetCurrentMethod());
+            LogHelper.LogInfo($"Can't focus, no elements in this direction. Right: {right}.", nameof(Focus));
             return null;
         }
 

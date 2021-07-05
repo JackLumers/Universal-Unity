@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UniversalUnity.Helpers._ProjectDependent;
 using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.Logs;
 
 namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
 {
@@ -40,7 +41,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             
             if (!IsDataInitialized)
             {
-                LogHelper.LogHelper.Log("Data not initialized on click call.", MethodBase.GetCurrentMethod(), LogHelper.LogHelper.LogType.Error);
+                LogHelper.LogError("Data not initialized on click call.", nameof(ProtectedOnClick));
             }
         }
         

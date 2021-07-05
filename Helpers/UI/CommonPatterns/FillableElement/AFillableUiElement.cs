@@ -2,6 +2,7 @@
 using System.Reflection;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.UI.BaseUiElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
@@ -58,19 +59,17 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
         {
             if (amount < 0)
             {
-                LogHelper.LogHelper.Log($"{nameof(amount)} Must be more than 0. Force set to 0.",
-                    MethodBase.GetCurrentMethod(),
-                    LogHelper.LogHelper.LogType.Error);
+                LogHelper.LogError($"{nameof(amount)} Must be more than 0. Force set to 0.", 
+                    nameof(ClampAmount));
                 
                 amount = 0;
             }
             else if (amount > maxAmount)
             {
-                LogHelper.LogHelper.Log(
+                LogHelper.LogError(
                     $"{nameof(amount)} Must be less than {nameof(maxAmount)} ({maxAmount}). " +
                     $"Force set to {maxAmount}.",
-                    MethodBase.GetCurrentMethod(),
-                    LogHelper.LogHelper.LogType.Error);
+                    nameof(ClampAmount));
                 
                 amount = maxAmount;
             }
