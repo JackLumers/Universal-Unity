@@ -1,7 +1,7 @@
 # Universal-Unity
 Scripts for easyer game development in Unity. Not properly documented yet and also can depend on other frameworks, I'll work on that later.
 
-# Installing:
+# Installing
 Adding to your Unity project as a submodule. 
 Recommended path: Assets/Scripts/UniversalUnity
 
