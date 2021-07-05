@@ -4,7 +4,7 @@ using UnityEngine;
 namespace UniversalUnity.Helpers.MonoBehaviourExtenders
 {
     /// <summary>
-    /// Inherit from this class if you need component that has instance you want to refer later.
+    /// Inherit from this class if you need a component that has instance you want to refer later.
     /// </summary>
     public abstract class GenericSingleton<T> : CachedMonoBehaviour where T : Component
     {

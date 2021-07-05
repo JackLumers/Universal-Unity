@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace UniversalUnity.Helpers.MonoBehaviourExtenders
 {
-    // Not works if object destroyed and used again (form scene to scene change and back)
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class CachedMonoBehaviour : MonoBehaviour
     {
@@ -17,7 +16,7 @@ namespace UniversalUnity.Helpers.MonoBehaviourExtenders
         {
             get
             {
-                if (ReferenceEquals(_transform, null)) _transform = base.transform;
+                if (_transform == null) _transform = base.transform;
                 return _transform;
             }
         }
@@ -26,7 +25,7 @@ namespace UniversalUnity.Helpers.MonoBehaviourExtenders
         {
             get
             {
-                if (ReferenceEquals(_gameObject, null)) _gameObject = base.gameObject;
+                if (_gameObject == null) _gameObject = base.gameObject;
                 return _gameObject;
             }
         }
