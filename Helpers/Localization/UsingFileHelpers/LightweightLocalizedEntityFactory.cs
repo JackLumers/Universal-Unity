@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Reflection;
-using Common.Helpers.Localization.Enums;
-using Common.Helpers.Parsing.UsingFileHelpers;
+using UniversalUnity.Helpers.Localization.Enums;
+using UniversalUnity.Helpers.Parsing.UsingFileHelpers;
 
-namespace Common.Helpers.Localization.UsingFileHelpers
+namespace UniversalUnity.Helpers.Localization.UsingFileHelpers
 {
     public class LightweightLocalizedEntityFactory :
         IParsedLightweightEntityFactory<ParsedLocalizedEntity,

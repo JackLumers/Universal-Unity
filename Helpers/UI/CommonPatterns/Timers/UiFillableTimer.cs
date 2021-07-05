@@ -1,7 +1,7 @@
-﻿using Common.Helpers.UI.CommonPatterns.FillableElement;
-using UnityEngine;
+﻿using UnityEngine;
+using UniversalUnity.Helpers.UI.CommonPatterns.FillableElement;
 
-namespace Common.Helpers.UI.CommonPatterns.Timers
+namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 {
     public class UiFillableTimer : BaseUiTimer
     {

@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UniversalUnity.Helpers.NoCategory;
 
-namespace Common.Helpers.Localization.Components
+namespace UniversalUnity.Helpers.Localization.Components
 {
     [RequireComponent(typeof(Text))]
     public class AutoLocalizationGetter : MonoBehaviour

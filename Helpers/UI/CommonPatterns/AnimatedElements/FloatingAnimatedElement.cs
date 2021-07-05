@@ -1,8 +1,8 @@
 ﻿using System.Collections;
-using Common.Helpers.Tweeks.CurveAnimationHelper;
 using UnityEngine;
+using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
-namespace Common.Helpers.UI.CommonPatterns.AnimatedElements
+namespace UniversalUnity.Helpers.UI.CommonPatterns.AnimatedElements
 {
     [RequireComponent(typeof(RectTransform))]
     public class FloatingAnimatedElement : BaseAnimatedElement

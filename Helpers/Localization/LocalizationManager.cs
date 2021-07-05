@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using Common.Helpers.Localization.Enums;
-using Common.Helpers.Localization.UsingFileHelpers;
-using Common.Helpers.Parsing.UsingFileHelpers;
-using Common.Helpers.PlayerPreferencesManager;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using CsvParser = Common.Helpers.Parsing.UsingFileHelpers.CsvParser;
+using UniversalUnity.Helpers.Localization.Enums;
+using UniversalUnity.Helpers.Localization.UsingFileHelpers;
+using UniversalUnity.Helpers.NoCategory;
+using UniversalUnity.Helpers.Parsing.UsingFileHelpers;
+using UniversalUnity.Helpers.Saves;
+using CsvParser = UniversalUnity.Helpers.Parsing.UsingFileHelpers.CsvParser;
 
-namespace Common.Helpers.Localization
+namespace UniversalUnity.Helpers.Localization
 {
     public static class LocalizationManager
     {

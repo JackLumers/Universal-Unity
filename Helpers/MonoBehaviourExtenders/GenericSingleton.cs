@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Common.Helpers.MonoBehaviourExtenders
+namespace UniversalUnity.Helpers.MonoBehaviourExtenders
 {
     /// <summary>
     /// Inherit from this class if you need component that has instance you want to refer later.

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections;
-using Common.Helpers.Coroutines;
-using Common.Helpers.MonoBehaviourExtenders;
-using Common.Helpers.UI.BaseUiElements;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.SceneLoading
+namespace UniversalUnity.Helpers.SceneLoading
 {
     // Must be in not destroyable parent
     public class LoadingScreen : GenericSingleton<LoadingScreen>

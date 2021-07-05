@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
-using Common.Helpers.Coroutines;
-using Common.Helpers.Tweeks.CurveAnimationHelper;
 using UnityEngine;
 using UnityEngine.UI;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
-namespace Common.Helpers.UI.CommonPatterns.FillableElement
+namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
 {
     public class UiFillableLine : AFillableUiElement
     {

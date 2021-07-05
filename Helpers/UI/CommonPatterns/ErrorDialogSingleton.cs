@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Common.Helpers.MonoBehaviourExtenders;
-using Common.Helpers.Pooling.SimplePool;
-using Common.Helpers.UI.BaseUiElements;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
+using UniversalUnity.Helpers.Pooling.SimplePool;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.UI.CommonPatterns
+namespace UniversalUnity.Helpers.UI.CommonPatterns
 {
     public class ErrorDialogSingleton : GenericSingleton<ErrorDialogSingleton>
     {

@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Common.Helpers.Pooling.SimplePool
+namespace UniversalUnity.Helpers.Pooling.SimplePool
 {
     /// <summary>
     /// Pooling implementation.

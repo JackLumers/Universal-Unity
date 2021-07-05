@@ -1,12 +1,12 @@
 ﻿using System.Collections;
 using System.Reflection;
-using Common.Helpers.Coroutines;
-using Common.Helpers.PlayerPreferencesManager;
-using Common.Helpers.Tweeks.CurveAnimationHelper;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.Saves;
+using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
-namespace Common.Helpers.AudioManager
+namespace UniversalUnity.Helpers.AudioManager
 {
     public class ManagedAudioSource : MonoBehaviour
     {

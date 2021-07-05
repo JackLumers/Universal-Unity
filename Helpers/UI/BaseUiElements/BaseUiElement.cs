@@ -2,13 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Common.Helpers.Coroutines;
-using Common.Helpers.MonoBehaviourExtenders;
-using Common.Helpers.Tweeks.CurveAnimationHelper;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
+using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
-namespace Common.Helpers.UI.BaseUiElements
+namespace UniversalUnity.Helpers.UI.BaseUiElements
 {
     /// <summary>
     /// Base class for all UI elements.

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections;
-using Common.Helpers._ProjectDependent;
-using Common.Helpers.Coroutines;
-using Common.Helpers.MonoBehaviourExtenders;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UniversalUnity.Helpers._ProjectDependent;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
 
-namespace Common.Helpers.SceneLoading
+namespace UniversalUnity.Helpers.SceneLoading
 {
     public class SceneLoader : GenericSingleton<SceneLoader>
     {

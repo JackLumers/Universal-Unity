@@ -1,7 +1,7 @@
 ﻿using System.Collections;
-using Common.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.UI.CommonPatterns.AnimatedElements
+namespace UniversalUnity.Helpers.UI.CommonPatterns.AnimatedElements
 {
     public abstract class BaseAnimatedElement : BaseUiElement
     {

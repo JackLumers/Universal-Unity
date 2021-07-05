@@ -1,9 +1,9 @@
 ﻿using System;
-using Common.Helpers.MonoBehaviourExtenders;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
 
-namespace Common.Helpers.UI.BaseUiElements
+namespace UniversalUnity.Helpers.UI.BaseUiElements
 {
     public class BaseWindowController<T> : GenericSingleton<T> where T: Component
     {

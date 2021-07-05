@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Common.Helpers.Extensions
+namespace UniversalUnity.Helpers.Extensions
 {
     public static class HashSetExtension
     {

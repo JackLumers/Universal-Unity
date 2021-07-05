@@ -1,12 +1,12 @@
 ﻿using System;
-using Common.Helpers.Coroutines;
-using Common.Helpers.Tweeks.CurveAnimationHelper;
-using Common.Helpers.UI.BaseUiElements;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.UI.CommonPatterns
+namespace UniversalUnity.Helpers.UI.CommonPatterns
 {
     public class AcceptButton : BaseInteractableUiElement
     {

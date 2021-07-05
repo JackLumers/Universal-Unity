@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using Random = System.Random;
 
-namespace Common.Helpers
+namespace UniversalUnity.Helpers.NoCategory
 {
     public class ShuffledList<T>
     {

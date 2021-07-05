@@ -4,13 +4,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Common.Helpers.Coroutines;
-using Common.Helpers.Pooling.SimplePool;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.Pooling.SimplePool;
 
-namespace Common.Helpers.UI.BaseUiElements.GenericDynamicContainer
+namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
 {
     /// <summary>
     /// Container for dynamic changing game objects, like items in scroll view and e.t.c.

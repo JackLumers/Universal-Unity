@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-namespace Common.Helpers.UI.CommonPatterns
+namespace UniversalUnity.Helpers.UI.CommonPatterns
 {
     public class SimpleScrollView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler, IScrollHandler {
         private Camera _mainCamera;

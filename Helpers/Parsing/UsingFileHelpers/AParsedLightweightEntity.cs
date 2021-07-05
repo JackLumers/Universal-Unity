@@ -1,4 +1,4 @@
-﻿namespace Common.Helpers.Parsing.UsingFileHelpers
+﻿namespace UniversalUnity.Helpers.Parsing.UsingFileHelpers
 {
     /// <summary>
     /// For less memory allocation you can use <see cref="IParsedLightweightEntityFactory{TParsed,TLight}"/>

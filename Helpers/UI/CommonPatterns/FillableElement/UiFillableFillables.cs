@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Common.Helpers.Coroutines;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Coroutines;
 
-namespace Common.Helpers.UI.CommonPatterns.FillableElement
+namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
 {
     /// <summary>
     /// A fillable element that fills filling elements in it.

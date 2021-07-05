@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Common.Helpers.Coroutines;
-using Common.Helpers.MonoBehaviourExtenders;
 using UnityEngine;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
 
-namespace Common.Helpers
+namespace UniversalUnity.Helpers.NoCategory
 {
     public class EventDispatcher : GenericSingleton<EventDispatcher>
     {

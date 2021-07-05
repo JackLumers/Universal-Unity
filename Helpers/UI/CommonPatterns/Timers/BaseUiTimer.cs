@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Reflection;
-using Common.Helpers.UI.BaseUiElements;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.UI.CommonPatterns.Timers
+namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 {
     public abstract class BaseUiTimer : BaseUiElement
     {

@@ -1,9 +1,9 @@
 ﻿using System;
-using Common.Helpers.UI.BaseUiElements;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.UI.CommonPatterns
+namespace UniversalUnity.Helpers.UI.CommonPatterns
 {
     /// <summary>
     /// TODO: change all references to a new UiDialog

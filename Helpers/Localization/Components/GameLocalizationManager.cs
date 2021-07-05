@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using Common.Helpers.MonoBehaviourExtenders;
-using Common.Helpers.Parsing.UsingFileHelpers;
-using Common.Helpers.SceneLoading;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-// ReSharper disable once RedundantUsingDirective
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
+using UniversalUnity.Helpers.SceneLoading;
 
-namespace Common.Helpers.Localization.Components
+namespace UniversalUnity.Helpers.Localization.Components
 {
     public class GameLocalizationManager : GenericSingleton<GameLocalizationManager>
     {
@@ -45,19 +43,6 @@ namespace Common.Helpers.Localization.Components
                 _sceneDependentLocalizations.Add(sceneDependentLocalization.sceneName, sceneDependentLocalization);
             }
             
-// #if UNITY_EDITOR
-//             // For testing all files will be loaded
-//             foreach (var sceneDependentLocalizations in _sceneDependentLocalizations)
-//             {
-//                 foreach (var localizationReference in sceneDependentLocalizations.Value.localizationAssetReferences)
-//                 {
-//                     LocalizationManager.AddFileToParse(localizationReference);
-//                 }
-//                 
-//             }
-//             #else
-//                         
-// #endif
             SceneLoader.OnSceneLoadingStarted += (scene, loadMode) => AddInParseByScene(scene.ToString());
             SceneManager.sceneUnloaded += (scene) => RemoveFromParseByScene(scene.name);
             LocalizationManager.StartParse();

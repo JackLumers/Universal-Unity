@@ -1,8 +1,8 @@
-﻿using Common.Helpers.Localization.Enums;
-using Common.Helpers.Parsing.UsingFileHelpers;
-using FileHelpers;
+﻿using FileHelpers;
+using UniversalUnity.Helpers.Localization.Enums;
+using UniversalUnity.Helpers.Parsing.UsingFileHelpers;
 
-namespace Common.Helpers.Localization.UsingFileHelpers
+namespace UniversalUnity.Helpers.Localization.UsingFileHelpers
 {
     /// <summary>
     /// Used for localization CSV tables parsing.

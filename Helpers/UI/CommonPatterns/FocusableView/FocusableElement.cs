@@ -1,6 +1,6 @@
-﻿using Common.Helpers.UI.BaseUiElements;
+﻿using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.UI.CommonPatterns.FocusableView
+namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
 {
     public class FocusableElement : BaseInteractableUiElement
     {

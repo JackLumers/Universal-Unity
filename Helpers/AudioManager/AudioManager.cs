@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Common.Helpers.MonoBehaviourExtenders;
 using UnityEngine;
 using UnityEngine.Audio;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
 
-namespace Common.Helpers.AudioManager
+namespace UniversalUnity.Helpers.AudioManager
 {
     public sealed class AudioManager : GenericSingleton<AudioManager>
     {

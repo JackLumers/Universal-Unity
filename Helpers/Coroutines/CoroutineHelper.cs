@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace Common.Helpers.Coroutines
+namespace UniversalUnity.Helpers.Coroutines
 {
     public static class CoroutineHelper
     {

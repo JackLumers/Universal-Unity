@@ -1,11 +1,11 @@
 using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using Cysharp.Threading.Tasks;
 using UnityEngine.UI;
 
-namespace Common.Helpers.Localization.Components
+namespace UniversalUnity.Helpers.Localization.Components
 {
     [RequireComponent(typeof(Image))]
     public class AutoLocalizationImageGetter : MonoBehaviour

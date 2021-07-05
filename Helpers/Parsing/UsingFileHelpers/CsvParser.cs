@@ -5,7 +5,7 @@ using FileHelpers;
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace Common.Helpers.Parsing.UsingFileHelpers
+namespace UniversalUnity.Helpers.Parsing.UsingFileHelpers
 {
     public static class CsvParser
     {

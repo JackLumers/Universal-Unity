@@ -1,4 +1,4 @@
-﻿namespace Common.Helpers.Localization.Enums
+﻿namespace UniversalUnity.Helpers.Localization.Enums
 {
     public enum ETextLanguage
     {

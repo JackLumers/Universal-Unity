@@ -1,8 +1,8 @@
 ﻿using System;
-using Common.Helpers.UI.BaseUiElements;
 using UnityEngine;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.UI.CommonPatterns.Dialog
+namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
 {
     public class NewUIDialog : BaseUiElement
     {

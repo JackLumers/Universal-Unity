@@ -1,6 +1,6 @@
 ﻿using FileHelpers;
 
-namespace Common.Helpers.Parsing.UsingFileHelpers
+namespace UniversalUnity.Helpers.Parsing.UsingFileHelpers
 {
     /// <summary>
     /// All parsed objects by <see cref="SwearingManager"/> must inherit from this class.

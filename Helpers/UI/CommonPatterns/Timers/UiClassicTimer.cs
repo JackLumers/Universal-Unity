@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
-using Common.Helpers.Coroutines;
-using Common.Helpers.UI.BaseUiElements;
 using UnityEngine;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.UI.CommonPatterns.Timers
+namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 {
     public class UiClassicTimer : BaseUiTimer
     {

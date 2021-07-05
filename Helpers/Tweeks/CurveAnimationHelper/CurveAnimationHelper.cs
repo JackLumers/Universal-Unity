@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Common.Helpers.Tweeks.CurveAnimationHelper
+namespace UniversalUnity.Helpers.Tweeks.CurveAnimationHelper
 {
     /// <summary>
     /// Class for helping animating using animation curve.

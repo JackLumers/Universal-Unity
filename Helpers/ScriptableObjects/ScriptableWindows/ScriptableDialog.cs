@@ -1,7 +1,7 @@
-﻿using Common.Helpers.UI.CommonPatterns.Dialog;
-using UnityEngine;
+﻿using UnityEngine;
+using UniversalUnity.Helpers.UI.CommonPatterns.Dialog;
 
-namespace Common.Helpers.ScriptableObjects.ScriptableWindows
+namespace UniversalUnity.Helpers.ScriptableObjects.ScriptableWindows
 {
     [CreateAssetMenu(fileName = "NewScriptableDialog", menuName = "ScriptableObjects/ScriptableWindows/ScriptableDialog")]
     public class ScriptableDialog : BaseScriptableWindow<NewUIDialog>

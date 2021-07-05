@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Common.Helpers.UI.BaseUiElements;
-using Common.Helpers.UI.BaseUiElements.GenericDynamicContainer;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer;
 
-namespace Common.Helpers.UI.CommonPatterns
+namespace UniversalUnity.Helpers.UI.CommonPatterns
 {
     public abstract class GenericClampScroll<TElementType, TElementData> : 
         GenericDynamicContainer<TElementType, TElementData> 

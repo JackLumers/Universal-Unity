@@ -1,16 +1,15 @@
-﻿using Common.Helpers.MonoBehaviourExtenders;
-using FileHelpers;
-using JetBrains.Annotations;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using FileHelpers;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
 
-namespace Common.Helpers.Parsing.UsingFileHelpers
+namespace UniversalUnity.Helpers.Parsing.UsingFileHelpers
 {
     public class SwearingManager : GenericSingleton<SwearingManager>
     {

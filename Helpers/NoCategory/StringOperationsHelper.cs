@@ -3,7 +3,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Common.Helpers
+namespace UniversalUnity.Helpers.NoCategory
 {
     public static class StringOperationsHelper
     {

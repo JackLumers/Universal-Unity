@@ -2,7 +2,7 @@
 using System.Reflection;
 using UnityEngine;
 
-namespace Common.Helpers.LogHelper
+namespace UniversalUnity.Helpers.LogHelper
 {
     public class LogHelper
     {

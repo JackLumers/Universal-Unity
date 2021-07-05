@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Common.Helpers.Coroutines;
-using Common.Helpers.Tweeks.CurveAnimationHelper;
-using Common.Helpers.UI.BaseUiElements;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.UI.CommonPatterns.FocusableView
+namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
 {
     // Work now only with same size elements and not tested properly. 
     // Must be tested and rewrote.

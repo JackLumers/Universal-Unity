@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
-using Common.Helpers.Coroutines;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
+using UniversalUnity.Helpers.Coroutines;
 
-namespace Common.Helpers.UI.BaseUiElements
+namespace UniversalUnity.Helpers.UI.BaseUiElements
 {
     public class BaseTextUiElement : BaseUiElement
     {

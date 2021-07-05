@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Common.Helpers
+namespace UniversalUnity.Helpers.NoCategory
 {
     public static class DictionaryOperationsHelper
     {

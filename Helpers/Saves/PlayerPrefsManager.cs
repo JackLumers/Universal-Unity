@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Common.Helpers.PlayerPreferencesManager
+namespace UniversalUnity.Helpers.Saves
 {
     public static class PlayerPrefsManager
     {

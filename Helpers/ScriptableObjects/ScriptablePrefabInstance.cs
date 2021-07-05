@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Common.Helpers.ScriptableObjects
+namespace UniversalUnity.Helpers.ScriptableObjects
 {
     [CreateAssetMenu(fileName = "NewScriptablePrefabInstance", menuName = "ScriptableObjects/ScriptablePrefabInstance")]
     public class ScriptablePrefabInstance : ScriptableObject

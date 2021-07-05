@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections;
-using Common.Helpers._ProjectDependent;
-using Common.Helpers.Coroutines;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UniversalUnity.Helpers._ProjectDependent;
+using UniversalUnity.Helpers.Coroutines;
 
-namespace Common.Helpers.UI.BaseUiElements
+namespace UniversalUnity.Helpers.UI.BaseUiElements
 {
     /// <summary>
     /// Base class for all UI elements that can be clicked by user.

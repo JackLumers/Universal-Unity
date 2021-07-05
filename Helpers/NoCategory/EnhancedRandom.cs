@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using Random = Unity.Mathematics.Random;
 
-namespace Common.Helpers
+namespace UniversalUnity.Helpers.NoCategory
 {
     public static class EnhancedRandom
     {

@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Reflection;
-using Common.Helpers._ProjectDependent;
-using Common.Helpers.Coroutines;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UniversalUnity.Helpers._ProjectDependent;
+using UniversalUnity.Helpers.Coroutines;
 
-namespace Common.Helpers.UI.BaseUiElements.GenericDynamicContainer
+namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
 {
     /// <summary>
     /// UI item that is interactable and can be initialized with different parameters.

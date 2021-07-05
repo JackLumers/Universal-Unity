@@ -1,4 +1,4 @@
-﻿namespace Common.Helpers._ProjectDependent
+﻿namespace UniversalUnity.Helpers._ProjectDependent
 {
     public enum ESceneName
     {

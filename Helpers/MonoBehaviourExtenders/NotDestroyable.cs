@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Common.Helpers.MonoBehaviourExtenders
+namespace UniversalUnity.Helpers.MonoBehaviourExtenders
 {
     public class NotDestroyable : MonoBehaviour
     {

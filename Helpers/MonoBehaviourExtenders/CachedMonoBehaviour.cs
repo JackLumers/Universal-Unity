@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
-namespace Common.Helpers.MonoBehaviourExtenders
+namespace UniversalUnity.Helpers.MonoBehaviourExtenders
 {
     // Not works if object destroyed and used again (form scene to scene change and back)
     [SuppressMessage("ReSharper", "InconsistentNaming")]

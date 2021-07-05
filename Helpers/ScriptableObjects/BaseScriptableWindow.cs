@@ -1,9 +1,9 @@
 ﻿using System;
-using Common.Helpers.UI.BaseUiElements;
 using UnityEditor;
 using UnityEngine;
+using UniversalUnity.Helpers.UI.BaseUiElements;
 
-namespace Common.Helpers.ScriptableObjects
+namespace UniversalUnity.Helpers.ScriptableObjects
 {
     public abstract class BaseScriptableWindow<T> : ScriptableObject where T: BaseUiElement
     {

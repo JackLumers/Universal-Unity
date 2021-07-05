@@ -1,4 +1,4 @@
-﻿namespace Common.Helpers.Parsing.UsingFileHelpers
+﻿namespace UniversalUnity.Helpers.Parsing.UsingFileHelpers
 {
     public interface IParsedLightweightEntityFactory<in TParsed, out TLight>
         where TLight: AParsedLightweightEntity
