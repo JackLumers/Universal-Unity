@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
-using UniversalUnity.Helpers.Coroutines;
-using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 using UniversalUnity.Helpers.UI.BaseUiElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns
@@ -15,11 +14,13 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         [SerializeField] public Vector3 openLocalPosition;
         [SerializeField] public Vector3 closeLocalPosition;
         [SerializeField] protected bool isOpenedOnInit;
-        
-        private Coroutine _openCoroutine;
-        private Coroutine _closeCoroutine;
+
+        private CancellationTokenSource _movingCancellationTokenSource = new CancellationTokenSource();
         private bool _isOpened;
 
+        private string _openTrigger = "OpenTrigger";
+        private string _closeTrigger = "CloseTrigger";
+        
         private RectTransform _rectTransform;
 
         private RectTransform RectTransform
@@ -44,16 +45,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
                 openPanelButton.OnClick += () => Switch();
             }
         }
-
-        public void ForceOpen()
-        {
-            ForceEnable();
-            CoroutineHelper.StopCoroutine(ref _closeCoroutine, this);
-            CoroutineHelper.StopCoroutine(ref _openCoroutine, this);
-            RectTransform.anchoredPosition = openLocalPosition;
-            _isOpened = true;
-        }
-
+        
         protected override void InheritInitComponents()
         {
             base.InheritInitComponents();
@@ -61,54 +53,79 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             RectTransform.anchoredPosition = isOpenedOnInit ? openLocalPosition : closeLocalPosition;
         }
 
+        public void ForceOpen()
+        {
+            ForceEnable();
+            _movingCancellationTokenSource.Cancel();
+            RectTransform.anchoredPosition = openLocalPosition;
+            _isOpened = true;
+        }
+
         public void ForceClose()
         {
-            CoroutineHelper.StopCoroutine(ref _closeCoroutine, this);
-            CoroutineHelper.StopCoroutine(ref _openCoroutine, this);
+            ForceEnable();
+            _movingCancellationTokenSource.Cancel();
             RectTransform.anchoredPosition = closeLocalPosition;
             _isOpened = false;
         }
         
-        public Coroutine Switch()
+        public async UniTask Switch()
         {
-            return _isOpened ? Close() : Open();
+            switch (_isOpened)
+            {
+                case true:
+                    await Close();
+                    break;
+                case false:
+                    await Open();
+                    break;
+            }
         }
         
-        public Coroutine Open([CanBeNull] Action onOpened = null)
+        public async UniTask Open([CanBeNull] Action onOpened = null)
         {
             if (!_isOpened)
             {
-                Enable();
+                _movingCancellationTokenSource.Cancel();
+                _movingCancellationTokenSource = new CancellationTokenSource();
                 _isOpened = true;
-                CoroutineHelper.StopCoroutine(ref _closeCoroutine, this);
-                return CoroutineHelper.RestartCoroutine(ref _openCoroutine, OpenAnimation(onOpened), this);
+                
+                await UniTask.WhenAll
+                (
+                    Enable().AttachExternalCancellation(_movingCancellationTokenSource.Token),
+                    UniTask.Run(() =>
+                    {
+                        _isOpened = true;
+                        Animator.SetTrigger(_openTrigger);
+                        UniTask.Yield(PlayerLoopTiming.Update);
+                        UniTask.Delay(Animator.GetCurrentAnimatorClipInfo(0).Length, 
+                            cancellationToken: _movingCancellationTokenSource.Token);
+                        onOpened?.Invoke();
+                    }));
             }
-
-            return null;
         }
 
-        public Coroutine Close([CanBeNull] Action onClosed = null)
+        public async UniTask Close([CanBeNull] Action onClosed = null)
         {
             if (_isOpened)
             {
+                _movingCancellationTokenSource.Cancel();
+                _movingCancellationTokenSource = new CancellationTokenSource();
                 _isOpened = false;
-                CoroutineHelper.StopCoroutine(ref _openCoroutine, this);
-                return CoroutineHelper.RestartCoroutine(ref _closeCoroutine, CloseAnimation(onClosed), this);
+                
+                await UniTask.WhenAll
+                (
+                    Enable().AttachExternalCancellation(_movingCancellationTokenSource.Token),
+                    UniTask.Run(() =>
+                    {
+                        _isOpened = true;
+                        Animator.SetTrigger(_closeTrigger);
+                        UniTask.Yield(PlayerLoopTiming.Update);
+                        UniTask.Delay(Animator.GetCurrentAnimatorClipInfo(0).Length, 
+                            cancellationToken: _movingCancellationTokenSource.Token);
+                        onClosed?.Invoke();
+                    }));
             }
-            
-            return null;
-        }
-        
-        protected virtual IEnumerator OpenAnimation([CanBeNull] Action onOpened)
-        {
-            yield return CurveAnimationHelper.MoveAnchored(RectTransform, openLocalPosition, speedOrTime: enableAnimationTime);
-            onOpened?.Invoke();
-        }
-        
-        protected virtual IEnumerator CloseAnimation([CanBeNull] Action onClosed)
-        {
-            yield return CurveAnimationHelper.MoveAnchored(RectTransform, closeLocalPosition, speedOrTime: enableAnimationTime);
-            onClosed?.Invoke();
         }
     }
 }

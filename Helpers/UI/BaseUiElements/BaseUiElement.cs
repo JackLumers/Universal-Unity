@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
-using UniversalUnity.Helpers.Coroutines;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
 using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
@@ -21,23 +19,21 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
     {
         [Header("= Base UI Element Fields =")]
         protected CanvasGroup CanvasGroup;
-
         protected Animator Animator;
 
-        public string enableTrigger = "enable";
-        public string disableTrigger = "disable";
-
-        protected CancellationTokenSource MovingCancellationTokenSource;
-        protected Coroutine AlphaChangeCancellationTokenSource;
-        protected Coroutine RotationCancellationTokenSource;
-        protected Coroutine ScalingCancellationTokenSource;
+        protected readonly Dictionary<string, AnimationClip> AnimationClips = new Dictionary<string, AnimationClip>();
+        
+        private CancellationTokenSource _movingCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _alphaChangeCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _rotationCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _scalingCancellationTokenSource = new CancellationTokenSource();
         
         protected bool IsInitialized { get; private set; }
 
         public bool IsEnabled { get; protected set; }
         
         public bool WasEnabled { get; protected set; }
-
+        
         private void Awake()
         {
             if(!IsInitialized) InitComponents();
@@ -54,12 +50,18 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         /// <para>Must be called in inheritors before using any methods or fields!</para>
         /// <remarks>Also can be called again if <see cref="DeInitAndRefresh"/> was called.</remarks>
         /// </summary>
-        private void InitComponents(bool calledByEnable = false)
+        public void InitComponents(bool calledByEnable = false)
         {
             if (!IsInitialized)
             {
                 CanvasGroup = GetComponent<CanvasGroup>();
                 Animator = GetComponent<Animator>();
+
+                foreach (var animationClip in Animator.runtimeAnimatorController.animationClips)
+                {
+                    AnimationClips.Add(animationClip.name, animationClip);
+                }
+                
                 IsInitialized = true;
                 
                 InheritInitComponents();
@@ -163,16 +165,16 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             
         }
         
-        public void Enable(bool enable, [CanBeNull] Action onDone = null,
+        public async UniTask Enable(bool enable, [CanBeNull] Action onDone = null,
             bool forceSwitchBlockInput = true)
         {
             switch (enable)
             {
                 case true:
-                    Enable(onDone, forceSwitchBlockInput);
+                    await Enable(onDone, forceSwitchBlockInput);
                     break;
                 case false:
-                    Disable(onDone, forceSwitchBlockInput);
+                    await Disable(onDone, forceSwitchBlockInput);
                     break;
             }
         }
@@ -192,9 +194,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
 
         /// <summary>
         /// Enables item with animation.
-        /// <see cref="EnablingAnimation"/>
         /// </summary>
-        public void Enable([CanBeNull]Action onEnabled = null, bool forceEnableInput = true)
+        public async UniTask Enable([CanBeNull]Action onEnabled = null, bool forceEnableInput = true)
         {
             if (!IsInitialized)
             {
@@ -213,13 +214,20 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             gameObject.SetActive(true);
             if(forceEnableInput) InteractionBlock("Disabled", false, true);
             IsEnabled = true;
+
+            Animator.Play(AnimationConstants.GetAnimatorHash(AnimationParamNames.Enabling));
+
+            var millis = AnimationClips[AnimationParamNames.Enabling.ToString()].length * 1000;
+            var speed = Animator.speed;
+            await UniTask.Delay((int)(millis * speed));
+            
+            OnEnabled(onEnabled);
         }
 
         /// <summary>
-        /// Disables item with coroutine animation. Inheritors can modify this animations if needed.
-        /// <see cref="DisablingAnimation"/>
+        /// Disables item with animation.
         /// </summary>
-        public void Disable([CanBeNull]Action onDisabled = null, bool forceDisableInput = true)
+        public async UniTask Disable([CanBeNull]Action onDisabled = null, bool forceDisableInput = true)
         {
             if (!gameObject.activeInHierarchy)
             {
@@ -229,6 +237,15 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             if (!IsInitialized) InitComponents();
             if(forceDisableInput) InteractionBlock("Disabled", true, true);
             IsEnabled = false;
+            
+            Animator.Play(AnimationConstants.GetAnimatorHash(AnimationParamNames.Enabling));
+
+            var millis = AnimationClips[AnimationParamNames.Disabling.ToString()].length * 1000;
+            var speed = Animator.speed;
+            await UniTask.Delay((int)(millis * speed));
+            
+            gameObject.SetActive(false);
+            OnDisabled(onDisabled);
         }
 
         public void ForceDisable()
@@ -273,47 +290,44 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
 
         public async UniTask Move(Vector3 targetLocalPosition, float timeOrSpeed, bool fixedTime, [CanBeNull] AnimationCurve curve)
         {
-            
+            _movingCancellationTokenSource.Cancel();
+            _movingCancellationTokenSource = new CancellationTokenSource();
             await CurveAnimationHelper.MoveAnchored((RectTransform) transform, targetLocalPosition,
                 speedOrTime: timeOrSpeed,
-                fixedTime: fixedTime, curve: curve).AttachExternalCancellation(MovingCancellationTokenSource.Token);
+                fixedTime: fixedTime, curve: curve, cancellationToken: _movingCancellationTokenSource.Token);
         }
 
-        public Coroutine Rotate(Quaternion targetLocalRotation, float timeOrSpeed, bool fixedTime)
+        public async UniTask Rotate(Quaternion targetLocalRotation, float timeOrSpeed, bool fixedTime)
         {
-            return CoroutineHelper.RestartCoroutine
-            (
-                ref RotationCoroutine,
-                CurveAnimationHelper.Rotate(transform, targetLocalRotation, speedOrTime: timeOrSpeed,
-                    fixedTime: fixedTime),
-                this
-            );
+            _rotationCancellationTokenSource.Cancel();
+            _rotationCancellationTokenSource = new CancellationTokenSource();
+
+            await CurveAnimationHelper.Rotate(transform, targetLocalRotation, speedOrTime: timeOrSpeed,
+                fixedTime: fixedTime, cancellationToken: _rotationCancellationTokenSource.Token);
         }
 
-        public Coroutine Scale(Vector3 targetLocalScale, float timeOrSpeed, bool fixedTime)
+        public async UniTask Scale(Vector3 targetLocalScale, float timeOrSpeed, bool fixedTime)
         {
-            return CoroutineHelper.RestartCoroutine
-            (
-                ref ScalingCoroutine,
-                CurveAnimationHelper.Scale(transform, targetLocalScale, speedOrTime: timeOrSpeed, fixedTime: fixedTime),
-                this
-            );
+            _scalingCancellationTokenSource.Cancel();
+            _scalingCancellationTokenSource = new CancellationTokenSource();
+            
+            await CurveAnimationHelper.Scale(transform, targetLocalScale, speedOrTime: timeOrSpeed,
+                fixedTime: fixedTime, cancellationToken: _scalingCancellationTokenSource.Token);
         }
 
-        public Coroutine ChangeAlpha(float targetAlpha, float timeInSeconds)
+        public async UniTask ChangeAlpha(float targetAlpha, float timeInSeconds)
         {
-            return CoroutineHelper.RestartCoroutine
+            _alphaChangeCancellationTokenSource.Cancel();
+            _alphaChangeCancellationTokenSource = new CancellationTokenSource();
+            
+            await CurveAnimationHelper.LerpFloatByCurve
             (
-                ref AlphaCoroutine,
-                CurveAnimationHelper.LerpFloatByCurve
-                (
-                    result => CanvasGroup.alpha = result,
-                    CanvasGroup.alpha,
-                    targetAlpha,
-                    timeOrSpeed: timeInSeconds,
-                    fixedTime: true
-                ),
-                this
+                result => CanvasGroup.alpha = result,
+                CanvasGroup.alpha,
+                targetAlpha,
+                timeOrSpeed: timeInSeconds,
+                fixedTime: true,
+                cancellationToken: _alphaChangeCancellationTokenSource.Token
             );
         }
         

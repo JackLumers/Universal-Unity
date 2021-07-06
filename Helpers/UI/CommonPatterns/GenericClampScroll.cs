@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.UI.BaseUiElements;
@@ -50,9 +51,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         {
             
         }
-
-        [CanBeNull] 
-        public Coroutine Scroll(bool next)
+        
+        public async UniTask Scroll(bool next)
         {
             var pageData = new List<TElementData>();
             var dataAsList = Data.Values.ToList();
@@ -67,7 +67,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
                 Debug.Log("dataIndex: " + dataIndex);
 
                 // if we already on last data element
-                if (dataAsList.Count - 1 == CurrentDataIndex) return null;
+                if (dataAsList.Count - 1 == CurrentDataIndex) return;
                 
                 CurrentDataIndex += elementsPerScroll;
                 
@@ -82,7 +82,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             else
             {
                 // If we are already on the first page
-                if (pageSize - 1 >= CurrentDataIndex) return null;
+                if (pageSize - 1 >= CurrentDataIndex) return;
 
                 Debug.Log(CurrentDataIndex);
                 CurrentDataIndex = pageSize * ((CurrentDataIndex - elementsPerScroll) / pageSize + 1) - 1;
@@ -101,10 +101,10 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
                 cardData.DeInit();
             }
 
-            return UpdateItems(pageData, pageData.Count);
+            await UpdateItems(pageData, pageData.Count);
         }
         
-        public Coroutine OpenPage(int page)
+        public async UniTask OpenPage(int page)
         {
             var dataAsList = Data.Values.ToList();
             var pageData = new List<TElementData>();
@@ -129,7 +129,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
 
             CurrentPage = page;
             CurrentDataIndex = dataIndex + pageData.Count - 1;
-            return UpdateItems(pageData, pageData.Count);
+            await UpdateItems(pageData, pageData.Count);
         }
     }
 }

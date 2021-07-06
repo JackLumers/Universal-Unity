@@ -1,4 +1,5 @@
 ﻿using System;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
@@ -24,18 +25,18 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             if (!(closeButton is null)) closeButton.OnClick += OnCloseButtonClick;
         }
 
-        public virtual Coroutine Open([CanBeNull] Action onOpened = null)
+        public virtual async UniTask Open([CanBeNull] Action onOpened = null)
         {
-            return uiContainer.Enable(() =>
+            await uiContainer.Enable(() =>
             {
                 OnOpened?.Invoke();
                 onOpened?.Invoke();
             });
         }
 
-        public virtual Coroutine Close([CanBeNull] Action onClosed = null)
+        public virtual async UniTask Close([CanBeNull] Action onClosed = null)
         {
-            return uiContainer.Disable(() =>
+            await uiContainer.Disable(() =>
             {
                 OnClosed?.Invoke();
                 onClosed?.Invoke();

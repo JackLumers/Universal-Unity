@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,12 +29,10 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             }
         }
 
-        public Coroutine ShowText(string text, [CanBeNull] Action onShown = null)
+        public async UniTask ShowText(string text, [CanBeNull] Action onShown = null)
         {
             gameObject.SetActive(true);
-            Enable();
-            return CoroutineHelper.RestartCoroutine(ref _textChangingCoroutine, 
-                TextChanging(text, onShown), this);
+            await TextChangingProcess(text, onShown);
         }
         
         public void ForceShowText(string text)
@@ -42,11 +41,11 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             textComponent.text = text;
         }
 
-        private IEnumerator TextChanging(string text, [CanBeNull] Action onChanged)
+        private async UniTask TextChangingProcess(string text, [CanBeNull] Action onChanged)
         {
-            yield return ChangeAlpha(0f, enableAnimationTime);
+            await Disable();
             Text = text;
-            yield return Enable(onChanged);
+            await Enable(onChanged);
         }
     }
 }

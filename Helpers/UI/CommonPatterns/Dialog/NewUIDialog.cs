@@ -1,4 +1,5 @@
 ﻿using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UniversalUnity.Helpers.UI.BaseUiElements;
 
@@ -64,14 +65,14 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
             declineButton.OnClick += action.Invoke;
         }
 
-        public Coroutine EnableAcceptButton(bool enable)
+        public async UniTask EnableAcceptButton(bool enable)
         {
-            return acceptButton.Enable(enable);
+            await acceptButton.Enable(enable);
         }
         
-        public Coroutine EnableDeclineButton(bool enable)
+        public async UniTask EnableDeclineButton(bool enable)
         {
-            return declineButton.Enable(enable);
+            await declineButton.Enable(enable);
         }
 
         public void ClearActions()
