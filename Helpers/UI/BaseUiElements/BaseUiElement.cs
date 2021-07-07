@@ -22,7 +22,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         protected Animator Animator;
 
         protected readonly Dictionary<string, AnimationClip> AnimationClips = new Dictionary<string, AnimationClip>();
-        
+
+        private CancellationTokenSource _enableCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _movingCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _alphaChangeCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _rotationCancellationTokenSource = new CancellationTokenSource();
@@ -33,6 +34,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         public bool IsEnabled { get; protected set; }
         
         public bool WasEnabled { get; protected set; }
+        
+        public float EnableAnimationTime { get; set; }
         
         private void Awake()
         {
@@ -165,16 +168,15 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             
         }
         
-        public async UniTask Enable(bool enable, [CanBeNull] Action onDone = null,
-            bool forceSwitchBlockInput = true)
+        public async UniTask Enable(bool enable, bool forceSwitchBlockInput)
         {
             switch (enable)
             {
                 case true:
-                    await Enable(onDone, forceSwitchBlockInput);
+                    await Enable(forceSwitchBlockInput);
                     break;
                 case false:
-                    await Disable(onDone, forceSwitchBlockInput);
+                    await Disable(forceSwitchBlockInput);
                     break;
             }
         }
@@ -195,13 +197,13 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         /// <summary>
         /// Enables item with animation.
         /// </summary>
-        public async UniTask Enable([CanBeNull]Action onEnabled = null, bool forceEnableInput = true)
+        public async UniTask Enable(bool forceEnableInput = true)
         {
             if (!IsInitialized)
             {
                 InitComponents(true);
             }
-            
+
             if (!WasEnabled)
             {
                 WasEnabled = true;
@@ -210,47 +212,54 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
                     CanvasGroup.alpha = 0;
                 }
             }
-            
+
             gameObject.SetActive(true);
-            if(forceEnableInput) InteractionBlock("Disabled", false, true);
+            if (forceEnableInput) InteractionBlock("Disabled", false, true);
             IsEnabled = true;
 
             Animator.Play(AnimationConstants.GetAnimatorHash(AnimationParamNames.Enabling));
 
             var millis = AnimationClips[AnimationParamNames.Enabling.ToString()].length * 1000;
             var speed = Animator.speed;
-            await UniTask.Delay((int)(millis * speed));
-            
-            OnEnabled(onEnabled);
+            _enableCancellationTokenSource.Cancel();
+            _enableCancellationTokenSource = new CancellationTokenSource();
+            await UniTask.Delay((int) (millis * speed),
+                cancellationToken: _enableCancellationTokenSource.Token);
+
+            OnEnabled();
         }
 
         /// <summary>
         /// Disables item with animation.
         /// </summary>
-        public async UniTask Disable([CanBeNull]Action onDisabled = null, bool forceDisableInput = true)
+        public async UniTask Disable(bool forceDisableInput = true)
         {
             if (!gameObject.activeInHierarchy)
             {
                 return;
             }
-            
+
             if (!IsInitialized) InitComponents();
-            if(forceDisableInput) InteractionBlock("Disabled", true, true);
+            if (forceDisableInput) InteractionBlock("Disabled", true, true);
             IsEnabled = false;
-            
             Animator.Play(AnimationConstants.GetAnimatorHash(AnimationParamNames.Enabling));
 
             var millis = AnimationClips[AnimationParamNames.Disabling.ToString()].length * 1000;
             var speed = Animator.speed;
-            await UniTask.Delay((int)(millis * speed));
-            
+
+            _enableCancellationTokenSource.Cancel();
+            _enableCancellationTokenSource = new CancellationTokenSource();
+            await UniTask.Delay((int) (millis * speed),
+                cancellationToken: _enableCancellationTokenSource.Token);
+
             gameObject.SetActive(false);
-            OnDisabled(onDisabled);
+            OnDisabled();
         }
 
         public void ForceDisable()
         {
             if (!IsInitialized) InitComponents();
+            _enableCancellationTokenSource.Cancel();
             InteractionBlock("Disabled", true, true);
             IsEnabled = false;
             CanvasGroup.alpha = 0;
@@ -269,22 +278,21 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
                 WasEnabled = true;
             }
             
+            _enableCancellationTokenSource.Cancel();
             gameObject.SetActive(true);
             InteractionBlock("Disabled", false, true);
             IsEnabled = true;
             CanvasGroup.alpha = 1;
         }
         
-        protected virtual void OnEnabled([CanBeNull]Action onEnabled)
+        protected virtual void OnEnabled()
         {
             InteractionBlock("Disabled", false, true);
-            onEnabled?.Invoke();
         }
         
-        protected virtual void OnDisabled([CanBeNull]Action onDisabled)
+        protected virtual void OnDisabled()
         {
             InteractionBlock("Disabled", true, true);
-            onDisabled?.Invoke();
             gameObject.SetActive(false);
         }
 

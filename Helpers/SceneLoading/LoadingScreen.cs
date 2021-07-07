@@ -1,65 +1,54 @@
-﻿using System;
-using System.Collections;
-using JetBrains.Annotations;
+﻿using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UniversalUnity.Helpers.Coroutines;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
 using UniversalUnity.Helpers.UI.BaseUiElements;
 
 namespace UniversalUnity.Helpers.SceneLoading
 {
-    // Must be in not destroyable parent
     public class LoadingScreen : GenericSingleton<LoadingScreen>
     {
         [SerializeField] private BaseUiElement ui;
         [SerializeField] private BaseTextUiElement textElement;
 
-        private Coroutine _textChangingCoroutine;
+        private CancellationTokenSource _textChangingCancellationTokenSource = new CancellationTokenSource();
 
-        protected override void InheritAwake()
+        public async UniTask Enable()
         {
-            //ui.gameObject.SetActive(false);
+            await ui.Enable();
+        }
+
+        public async UniTask Disable()
+        {
+            await ui.Disable();
         }
         
-        public Coroutine Enable([CanBeNull] Action onEnabled = null)
-        {
-            return ui.Enable(onEnabled);
-        }
-
         public void ForceEnable()
         {
             ui.ForceEnable();
         }
 
-        public Coroutine Disable([CanBeNull] Action onDisabled = null)
-        {
-            return ui.Disable(onDisabled);
-        }
-        
         public void ForceDisable()
         {
             ui.ForceDisable();
         }
 
-        public Coroutine ShowText(string text, [CanBeNull] Action onSet = null)
+        public async UniTask ShowText(string text)
         {
-            ui.Enable();
-            return CoroutineHelper.RestartCoroutine(ref _textChangingCoroutine, TextChanging(text, onSet), this);
+            _textChangingCancellationTokenSource.Cancel();
+            _textChangingCancellationTokenSource = new CancellationTokenSource();
+            UniTask.Run(
+                () => ui.Enable(),
+                cancellationToken: _textChangingCancellationTokenSource.Token
+            );
+            await TextChanging(text);
         }
 
-        public void SetText(string text)
+        private async UniTask TextChanging(string text)
         {
-            textElement.gameObject.SetActive(true);
+            if(textElement.IsEnabled) await textElement.Disable();
             textElement.Text = text;
-        }
-
-        private IEnumerator TextChanging(string text, [CanBeNull] Action onChanged)
-        {
-            if(!ui.IsEnabled) yield return ui.Enable();
-            if(textElement.IsEnabled) yield return textElement.Disable();
-            textElement.Text = text;
-            yield return textElement.Enable();
-            onChanged?.Invoke();
+            await textElement.Enable();
         }
     }
 }

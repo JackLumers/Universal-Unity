@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using UniversalUnity.Helpers.Coroutines;
@@ -14,14 +16,14 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
         public RectTransform fillContainer;
         public Image fillLine;
 
-        protected Rect _containerRect;
-        protected RectTransform _fillLineTransform;
+        protected Rect ContainerRect;
+        protected RectTransform FillLineTransform;
 
-        protected float _containerWidth;
-        protected float _containerHeight;
-        protected float _stepLength;
+        protected float ContainerWidth;
+        protected float ContainerHeight;
+        protected float StepLength;
 
-        private Coroutine _fillCoroutine;
+        private CancellationTokenSource _fillCancellationTokenSource = new CancellationTokenSource();
 
         public enum FillType
         {
@@ -36,18 +38,18 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
         /// </summary>
         public void Recalculate()
         {
-            _containerWidth = _containerRect.width;
-            _containerHeight = _containerRect.height;
+            ContainerWidth = ContainerRect.width;
+            ContainerHeight = ContainerRect.height;
             
             switch (fillType)
             {
                 case FillType.LeftToRight:
                 case FillType.RightToLeft:
-                    _stepLength = _containerWidth / maxAmount;
+                    StepLength = ContainerWidth / maxAmount;
                     break;
                 case FillType.DownToUp:
                 case FillType.UpToDown:
-                    _stepLength = _containerHeight / maxAmount;
+                    StepLength = ContainerHeight / maxAmount;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -56,63 +58,61 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
 
         protected override void InheritInitComponents()
         {
-            _containerRect = fillContainer.rect;
-            _fillLineTransform = (RectTransform) fillLine.transform;
+            ContainerRect = fillContainer.rect;
+            FillLineTransform = (RectTransform) fillLine.transform;
             Recalculate();
             
             base.InheritInitComponents();
         }
 
-        protected override Coroutine OnFill(float amount, float amountPerSecond, Action onFilled)
+        protected override async UniTask OnFill(float amount, float amountPerSecond)
         {
             float timeInSeconds = Math.Abs(amount - FilledAmount) / amountPerSecond;
-                
+
+            _fillCancellationTokenSource.Cancel();
+            _fillCancellationTokenSource = new CancellationTokenSource();
+            
             switch (fillType)
             {
                 case FillType.LeftToRight:
-                    return CoroutineHelper.RestartCoroutine(
-                        ref _fillCoroutine,
-                        CurveAnimationHelper.MoveAnchored
-                        (
-                            _fillLineTransform,
-                            new Vector3(-_containerWidth + _stepLength * amount, 0),
-                            speedOrTime: timeInSeconds, onDone: onFilled
-                        ),
-                        this
+                    await CurveAnimationHelper.MoveAnchored
+                    (
+                        FillLineTransform,
+                        new Vector3(-ContainerWidth + StepLength * amount, 0),
+                        speedOrTime: timeInSeconds, cancellationToken: _fillCancellationTokenSource.Token
                     );
+                    break;
+                
                 case FillType.RightToLeft:
-                    return CoroutineHelper.RestartCoroutine(
-                        ref _fillCoroutine,
-                        CurveAnimationHelper.MoveAnchored
-                        (
-                            _fillLineTransform,
-                            new Vector3(_containerWidth - _stepLength * amount, 0),
-                            speedOrTime: timeInSeconds, onDone: onFilled
-                        ),
-                        this
+                    await CurveAnimationHelper.MoveAnchored
+                    (
+                        FillLineTransform,
+                        new Vector3(ContainerWidth - StepLength * amount, 0),
+                        speedOrTime: timeInSeconds,
+                        cancellationToken: _fillCancellationTokenSource.Token
                     );
+                    break;
+
                 case FillType.DownToUp:
-                    return CoroutineHelper.RestartCoroutine(
-                        ref _fillCoroutine,
-                        CurveAnimationHelper.MoveAnchored
-                        (
-                            _fillLineTransform,
-                            new Vector3(0, -_containerHeight + _stepLength * amount),                   
-                            speedOrTime: timeInSeconds, onDone: onFilled
-                        ),
-                        this
+                    await CurveAnimationHelper.MoveAnchored
+                    (
+                        FillLineTransform,
+                        new Vector3(0, -ContainerHeight + StepLength * amount),
+                        speedOrTime: timeInSeconds,
+                        cancellationToken: _fillCancellationTokenSource.Token
                     );
+                    break;
+
                 case FillType.UpToDown:
-                    return CoroutineHelper.RestartCoroutine(
-                        ref _fillCoroutine,
-                        CurveAnimationHelper.MoveAnchored
-                        (
-                            _fillLineTransform,
-                            new Vector3(0, _containerHeight + _stepLength * amount),
-                            speedOrTime: timeInSeconds, onDone: onFilled
-                        ),
-                        this
+                    await CurveAnimationHelper.MoveAnchored
+                    (
+                        FillLineTransform,
+                        new Vector3(0, ContainerHeight + StepLength * amount),
+                        speedOrTime: timeInSeconds,
+                        cancellationToken: _fillCancellationTokenSource.Token
                     );
+                    break;
+                
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -123,16 +123,16 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             switch (fillType)
             {
                 case FillType.LeftToRight:
-                    _fillLineTransform.anchoredPosition = new Vector3(-_containerWidth + _stepLength * amount, 0);
+                    FillLineTransform.anchoredPosition = new Vector3(-ContainerWidth + StepLength * amount, 0);
                     break;
                 case FillType.RightToLeft:
-                    _fillLineTransform.anchoredPosition = new Vector3(_containerWidth - _stepLength * amount, 0);
+                    FillLineTransform.anchoredPosition = new Vector3(ContainerWidth - StepLength * amount, 0);
                     break;
                 case FillType.DownToUp:
-                    _fillLineTransform.anchoredPosition = new Vector3(0, -_containerHeight + _stepLength * amount);
+                    FillLineTransform.anchoredPosition = new Vector3(0, -ContainerHeight + StepLength * amount);
                     break;
                 case FillType.UpToDown:
-                    _fillLineTransform.anchoredPosition = new Vector3(0, _containerHeight + _stepLength * amount);
+                    FillLineTransform.anchoredPosition = new Vector3(0, ContainerHeight + StepLength * amount);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -140,22 +140,22 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
         }
 
         [ContextMenu("[RuntimeTest] -> Test Fillable Line")]
-        public void Test()
+        public async void Test()
         {
-            Enable();
-            StartCoroutine(TestProcess());
+            await Enable();
+            await TestProcess();
         }
 
-        private IEnumerator TestProcess()
+        private async UniTask TestProcess()
         {
-            yield return Fill(100);
-            yield return Fill(0);
-            yield return Fill(10);
-            yield return Fill(50);
-            yield return Fill(60);
-            yield return Fill(100);
-            yield return Fill(70);
-            yield return Fill(0);
+            await Fill(100);
+            await Fill(0);
+            await Fill(10);
+            await Fill(50);
+            await Fill(60);
+            await Fill(100);
+            await Fill(70);
+            await Fill(0);
         }
     }
 }

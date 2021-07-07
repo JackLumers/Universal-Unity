@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UniversalUnity.Helpers.Coroutines;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
 {
@@ -15,7 +13,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
         [Header("UiFillableFillables Fields")]
         [SerializeField] private List<AFillableUiElement> counterElements;
 
-        private Coroutine _fillCoroutine;
+        private CancellationTokenSource _fillCancellationTokenSource = new CancellationTokenSource();
 
         protected override void InheritInitComponents()
         {
@@ -23,15 +21,14 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             base.InheritInitComponents();
         }
 
-        protected override Coroutine OnFill(float amount, float amountPerSecond, Action onFilled)
+        protected override async UniTask OnFill(float amount, float amountPerSecond)
         {
+            _fillCancellationTokenSource.Cancel();
+            _fillCancellationTokenSource = new CancellationTokenSource();
+            
             float elementEnableTimeInSeconds = amountPerSecond / maxAmount;
 
-            return CoroutineHelper.RestartCoroutine(
-                ref _fillCoroutine,
-                FillProcess(amount, elementEnableTimeInSeconds, onFilled),
-                this
-            );
+            await FillProcess(amount, elementEnableTimeInSeconds);
         }
 
         protected override void OnForceFill(float amount)
@@ -51,7 +48,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             }
         }
 
-        private IEnumerator FillProcess(float amount, float elementFillTimeInSeconds, [CanBeNull] Action onFilled)
+        private async UniTask FillProcess(float amount, float elementFillTimeInSeconds)
         {
             for (int i = 0; i < counterElements.Count; i++)
             {
@@ -59,16 +56,15 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
                 // if must be filled
                 if (i < amount)
                 {
-                    yield return counterElement.Fill(counterElement.maxAmount, elementFillTimeInSeconds * counterElement.maxAmount);
+                    await counterElement.Fill(counterElement.maxAmount, 
+                        elementFillTimeInSeconds * counterElement.maxAmount);
                 }
                 // if must be empty
                 else
                 {
-                    yield return counterElement.Fill(0, elementFillTimeInSeconds * counterElement.maxAmount);
+                    await counterElement.Fill(0, elementFillTimeInSeconds * counterElement.maxAmount);
                 }
             }
-
-            onFilled?.Invoke();
         }
     }
 }

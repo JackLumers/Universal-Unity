@@ -29,10 +29,10 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             }
         }
 
-        public async UniTask ShowText(string text, [CanBeNull] Action onShown = null)
+        public async UniTask ShowText(string text)
         {
             gameObject.SetActive(true);
-            await TextChangingProcess(text, onShown);
+            await TextChangingProcess(text);
         }
         
         public void ForceShowText(string text)
@@ -41,11 +41,11 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             textComponent.text = text;
         }
 
-        private async UniTask TextChangingProcess(string text, [CanBeNull] Action onChanged)
+        private async UniTask TextChangingProcess(string text)
         {
             await Disable();
             Text = text;
-            await Enable(onChanged);
+            await Enable();
         }
     }
 }

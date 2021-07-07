@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
@@ -82,14 +82,15 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             }
         }
         
-        public static void CloseAllDialogs()
+        public static async UniTask CloseAllDialogs()
         {
             foreach (var uiDialog in _openedDialogs)
             {
-                uiDialog.Value.Disable(() => SimplePool.Return(uiDialog.Value, PoolName));
+                await uiDialog.Value.Disable();
+                SimplePool.Return(uiDialog.Value, PoolName);
             }
             _openedDialogs.Clear();
-            Instance.raycastBlockElement.Disable();
+            await Instance.raycastBlockElement.Disable();
         }
     }
 }

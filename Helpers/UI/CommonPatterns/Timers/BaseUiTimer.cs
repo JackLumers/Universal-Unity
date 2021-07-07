@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Reflection;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
@@ -23,13 +23,13 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
             _destroyed = true;
         }
 
-        public Coroutine StartTimer(float durationInMillis, [CanBeNull] Action onDone = null)
+        public async UniTask StartTimer(float durationInMillis, [CanBeNull] Action onDone = null)
         {
             if (durationInMillis < 0)
             {
                 LogHelper.LogError("Argument out of range! Must be >= 0.",
                     nameof(StartTimer));
-                return null;
+                return;
             }
 
             _timer?.Dispose();
@@ -38,10 +38,10 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
             _timer.AutoReset = false;
             _timer.Elapsed += (sender, args) => HandleTimer(onDone);
 
-            return UiHandleTimer(durationInMillis);
+            await UiHandleTimer(durationInMillis);
         }
 
-        protected abstract Coroutine UiHandleTimer(float durationInMillis);
+        protected abstract UniTask UiHandleTimer(float durationInMillis);
 
         private void HandleTimer([CanBeNull] Action onDone)
         {

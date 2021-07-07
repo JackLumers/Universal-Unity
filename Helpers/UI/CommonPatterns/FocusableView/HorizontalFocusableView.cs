@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Coroutines;
@@ -26,7 +28,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
         protected float _childWidth;
         protected float _initialPosition;
         
-        protected Coroutine _focusCoroutine;
+        protected CancellationTokenSource _focusCancellationTokenSource = new CancellationTokenSource();
         protected int _focusedIndex;
         protected Vector3 _savedPosition;
 
@@ -105,12 +107,12 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             UpdateButtonsState();
         }
 
-        public Coroutine Focus(int childIndex)
+        public async UniTask Focus(int childIndex)
         {
             if (childIndex < 0)
             {
                 LogHelper.LogError($"{nameof(childIndex)} Must be more than 0.", nameof(Focus));
-                return null;
+                return;
             }
             
             if (childIndex > ElementsCount)
@@ -127,27 +129,23 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             if (childIndex > (float) ElementsCount / 2)
             {
                 _savedPosition = new Vector3(_initialPosition + childIndex * _childWidth, 0);
-                return CoroutineHelper.RestartCoroutine
-                (
-                    ref _focusCoroutine,
-                    CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed),
-                    this
-                );
+                _focusCancellationTokenSource.Cancel();
+                _focusCancellationTokenSource = new CancellationTokenSource();
+                await CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed, 
+                    cancellationToken: _focusCancellationTokenSource.Token);
             }
             // left
             else
             {
                 _savedPosition = new Vector3(-_initialPosition + childIndex * _childWidth, 0);
-                return CoroutineHelper.RestartCoroutine
-                (
-                    ref _focusCoroutine,
-                    CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed),
-                    this
-                );
+                _focusCancellationTokenSource.Cancel();
+                _focusCancellationTokenSource = new CancellationTokenSource();
+                await CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed, 
+                    cancellationToken: _focusCancellationTokenSource.Token);
             }
         }
 
-        public Coroutine Focus(bool right)
+        public async UniTask Focus(bool right)
         {
             // right
             if (right)
@@ -159,12 +157,10 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
                     UpdateButtonsState();
                     
                     _savedPosition = new Vector3(_savedPosition.x - _childWidth, 0);
-                    return CoroutineHelper.RestartCoroutine
-                    (
-                        ref _focusCoroutine,
-                        CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed),
-                        this
-                    );
+                    _focusCancellationTokenSource.Cancel();
+                    _focusCancellationTokenSource = new CancellationTokenSource();
+                    await CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed, 
+                        cancellationToken: _focusCancellationTokenSource.Token);
                 }
             }
             // left
@@ -177,18 +173,14 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
                     UpdateButtonsState();
                     
                     _savedPosition = new Vector3(_savedPosition.x + _childWidth, 0);
-                    return CoroutineHelper.RestartCoroutine
-                    (
-                        ref _focusCoroutine,
-                        CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed),
-                        this
-                    );
+                    _focusCancellationTokenSource.Cancel();
+                    _focusCancellationTokenSource = new CancellationTokenSource();
+                    await CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed, 
+                        cancellationToken: _focusCancellationTokenSource.Token);
                 }
             }
-
-
+            
             LogHelper.LogInfo($"Can't focus, no elements in this direction. Right: {right}.", nameof(Focus));
-            return null;
         }
 
         public bool CanFocus(bool right)
