@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 using UniversalUnity.Helpers.UI.BaseUiElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns
@@ -15,7 +16,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         [SerializeField] public Vector3 closeLocalPosition;
         [SerializeField] protected bool isOpenedOnInit;
 
-        private CancellationTokenSource _movingCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _openCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _closeCancellationTokenSource = new CancellationTokenSource();
         private bool _isOpened;
 
         private string _openTrigger = "OpenTrigger";
@@ -42,7 +44,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             base.InheritAwake();
             if (!ReferenceEquals(openPanelButton, null))
             {
-                openPanelButton.OnClick += async () => await Switch();
+                openPanelButton.OnClick += UniTask.Action(async () => await Switch());
             }
         }
         
@@ -56,7 +58,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         public void ForceOpen()
         {
             ForceEnable();
-            _movingCancellationTokenSource.Cancel();
+            _openCancellationTokenSource.Cancel();
+            _closeCancellationTokenSource.Cancel();
             RectTransform.anchoredPosition = openLocalPosition;
             _isOpened = true;
         }
@@ -64,7 +67,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         public void ForceClose()
         {
             ForceEnable();
-            _movingCancellationTokenSource.Cancel();
+            _openCancellationTokenSource.Cancel();
+            _closeCancellationTokenSource.Cancel();
             RectTransform.anchoredPosition = closeLocalPosition;
             _isOpened = false;
         }
@@ -81,28 +85,25 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
                     break;
             }
         }
-        
+
         public async UniTask Open([CanBeNull] Action onOpened = null)
         {
             if (!_isOpened)
             {
-                _movingCancellationTokenSource.Cancel();
-                _movingCancellationTokenSource = new CancellationTokenSource();
-                _isOpened = true;
+                _openCancellationTokenSource.Cancel();
+                _closeCancellationTokenSource.Cancel();
                 
+                _isOpened = true;
+
+                _openCancellationTokenSource = new CancellationTokenSource();
                 await UniTask.WhenAll
                 (
-                    Enable().AttachExternalCancellation(_movingCancellationTokenSource.Token),
-                    UniTask.Run(() =>
-                    {
-                        _isOpened = true;
-                        // TODO: Add slide logic
-                        // Animator.SetTrigger(_openTrigger);
-                        // UniTask.Yield(PlayerLoopTiming.Update);
-                        // UniTask.Delay(Animator.GetCurrentAnimatorClipInfo(0).Length, 
-                        //     cancellationToken: _movingCancellationTokenSource.Token);
-                        onOpened?.Invoke();
-                    }));
+                    Enable().AttachExternalCancellation(_openCancellationTokenSource.Token),
+                    CurveAnimationHelper.MoveAnchored(RectTransform, openLocalPosition,
+                        speedOrTime: EnableAnimationTime,
+                        cancellationToken: _openCancellationTokenSource.Token)
+                );
+                onOpened?.Invoke();
             }
         }
 
@@ -110,23 +111,21 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         {
             if (_isOpened)
             {
-                _movingCancellationTokenSource.Cancel();
-                _movingCancellationTokenSource = new CancellationTokenSource();
+                _openCancellationTokenSource.Cancel();
+                _closeCancellationTokenSource.Cancel();
+                
                 _isOpened = false;
                 
+                _closeCancellationTokenSource = new CancellationTokenSource();
                 await UniTask.WhenAll
                 (
-                    Enable().AttachExternalCancellation(_movingCancellationTokenSource.Token),
-                    UniTask.Run(() =>
-                    {
-                        _isOpened = true;
-                        // TODO: Add slide logic
-                        // Animator.SetTrigger(_closeTrigger);
-                        // UniTask.Yield(PlayerLoopTiming.Update);
-                        // UniTask.Delay(Animator.GetCurrentAnimatorClipInfo(0).Length, 
-                        //     cancellationToken: _movingCancellationTokenSource.Token);
-                        onClosed?.Invoke();
-                    }));
+                    Enable().AttachExternalCancellation(_closeCancellationTokenSource.Token),
+                    CurveAnimationHelper.MoveAnchored(RectTransform, closeLocalPosition,
+                        speedOrTime: EnableAnimationTime, 
+                        cancellationToken: _closeCancellationTokenSource.Token)
+                );
+                
+                onClosed?.Invoke();
             }
         }
     }

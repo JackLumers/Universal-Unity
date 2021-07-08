@@ -1,5 +1,4 @@
-﻿using System;
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
@@ -14,9 +13,6 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         [SerializeField] [CanBeNull] 
         protected BaseInteractableUiElement closeButton;
 
-        public event Action OnClosed;
-        public event Action OnOpened;
-        
         public bool IsOpened => uiContainer.IsEnabled;
 
         protected override void InheritAwake()

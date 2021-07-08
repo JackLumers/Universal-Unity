@@ -20,6 +20,9 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         [Header("= Base UI Element Fields =")]
         protected CanvasGroup CanvasGroup;
 
+        [SerializeField]
+        private float defaultEnableAnimationTime = 0.5f;
+        
         private CancellationTokenSource _enableCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _disableCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _movingCancellationTokenSource = new CancellationTokenSource();
@@ -56,7 +59,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             if (!IsInitialized)
             {
                 CanvasGroup = GetComponent<CanvasGroup>();
-                
+                EnableAnimationTime = defaultEnableAnimationTime;
                 IsInitialized = true;
                 
                 InheritInitComponents();
