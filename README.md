@@ -12,6 +12,8 @@ Unity packages:
 Can be added as package if Unity >= 2019.3.4f1, Unity >= 2020.1a21.
 
 Other libraries:
+- [DOTween](http://dotween.demigiant.com/getstarted.php) for data-driven animation scripting.
+Note: add UNITASK_DOTWEEN_SUPPORT in ProjectSettings -> Player -> Other Settings -> Scripting Define Symbols
 - [NuGetForUnity](https://github.com/GlitchEnzo/NuGetForUnity) for getting NuGet packages.
 - [FileHelpers](https://github.com/MarcosMeli/FileHelpers) for csv files parsing.
 
