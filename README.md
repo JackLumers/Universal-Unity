@@ -3,7 +3,7 @@ Scripts for easyer game development in Unity. Not properly documented yet and al
 
 # Installing
 Adding to your Unity project as a submodule after intalling all dependencies. 
-Recommended path: Assets/Scripts/UniversalUnity
+Recommended path: Assets/UniversalUnity
 
 # Dependencies
 Unity packages:
