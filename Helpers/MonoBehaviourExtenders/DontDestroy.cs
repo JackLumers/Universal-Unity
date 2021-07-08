@@ -2,17 +2,11 @@
 
 namespace UniversalUnity.Helpers.MonoBehaviourExtenders
 {
-    public class NotDestroyable : MonoBehaviour
+    public sealed class DontDestroy : MonoBehaviour
     {
         private void Awake()
         {
             DontDestroyOnLoad(this);
-            InheritAwake();
-        }
-
-        protected virtual void InheritAwake()
-        {
-            
         }
     }
 }

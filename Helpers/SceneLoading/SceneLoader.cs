@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -29,9 +30,10 @@ namespace UniversalUnity.Helpers.SceneLoading
             };
         }
 
-        public void LoadSceneAsync(ESceneName sceneName, [CanBeNull] Action onLoaded = null, LoadSceneMode loadSceneMode = LoadSceneMode.Single)
+        public async UniTask LoadSceneAsync(ESceneName sceneName, [CanBeNull] Action onLoaded = null, LoadSceneMode loadSceneMode = LoadSceneMode.Single)
         {
-            loadingScreen.Enable(() => { StartSceneLoading(sceneName, loadSceneMode, onLoaded); });
+            await loadingScreen.Enable();
+            StartSceneLoading(sceneName, loadSceneMode, onLoaded);
         }
 
         private void StartSceneLoading(ESceneName sceneName, LoadSceneMode loadSceneMode, [CanBeNull] Action onLoaded)

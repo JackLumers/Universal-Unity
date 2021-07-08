@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Coroutines;
@@ -21,7 +22,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             base.InheritInitComponents();
         }
 
-        protected override Coroutine OnFill(float amount, float amountPerSecond, Action onFilled)
+        protected override async UniTask OnFill(float amount, float amountPerSecond)
         {
             float elementEnableTimeInSeconds = maxAmount / amountPerSecond;
 
@@ -29,12 +30,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             {
                 counterElement.EnableAnimationTime = elementEnableTimeInSeconds;
             }
-            
-            return CoroutineHelper.RestartCoroutine(
-                ref _fillCoroutine,
-                FillProcess(amount, onFilled),
-                this
-            );
+
+            await FillProcess(amount);
         }
 
         protected override void OnForceFill(float amount)
@@ -52,21 +49,19 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             }
         }
 
-        private IEnumerator FillProcess(float amount, [CanBeNull] Action onFilled)
+        private async UniTask FillProcess(float amount)
         {
             for (var i = 0; i < counterElements.Count; i++)
             {
                 if (i < amount)
                 {
-                    yield return counterElements[i].Enable();
+                    await counterElements[i].Enable();
                 }
                 else
                 {
-                    yield return counterElements[i].Disable();
+                    await counterElements[i].Disable();
                 }
             }
-
-            onFilled?.Invoke();
         }
     }
 }

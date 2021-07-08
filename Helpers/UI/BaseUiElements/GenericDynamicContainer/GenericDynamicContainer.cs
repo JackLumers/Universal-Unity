@@ -1,13 +1,14 @@
 ﻿// By Ilyas Kharisov, Fair Games, 2020.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.Pooling.SimplePool;
 
 namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
@@ -17,7 +18,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
     /// Objects RE_instantiation optimized by pooling.
     /// 
     /// Note that all instantiated items will be in memory, if not cleared MANUALLY using
-    /// <see cref="ForceClear"/> or <see cref="AwaitClear"/> or <see cref="AwaitClearInOrder"/>.
+    /// <see cref="ForceClear"/> or <see cref="Clear"/> or <see cref="ClearInOrder"/>.
     /// 
     /// For scroll view optimization with multiple entries you will need to use your own scroll view optimization.
     /// </summary>
@@ -53,7 +54,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
 
         private void OnDestroy()
         {
-            ClearAndDestroyPool();
+            ForceClearAndDestroyPool();
             InheritOnDestroy();
         }
 
@@ -85,15 +86,16 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
         /// <param name="numberOfElementsPerStep">How many elements will be spawn at the same time</param>
         /// <param name="reverse">Add items from bottom of the enumerable</param>
         /// <typeparam name="TElementType"><see cref="BaseDynamicUiElement{TElementType, TElementData}"/> - item with dynamic parameters initialization</typeparam>
-        public Coroutine UpdateItems(IEnumerable<TElementData> data, int numberOfElementsPerStep = 1,
+        public async UniTask UpdateItems(IEnumerable<TElementData> data, int numberOfElementsPerStep = 1,
             bool reverse = false)
         {
             if (!SimplePool.IsPoolForObjectsExist(PoolName))
                 SimplePool.CreatePool(PoolName);
             ForceClear();
             gameObject.SetActive(true);
-            return CoroutineHelper.RestartCoroutine(ref UpdateProcess,
-                UpdateItemsProcess(data, numberOfElementsPerStep, reverse), this);
+            
+            // Todo: CRITICAL! Cancel update if there was
+            await UpdateItemsProcess(data, numberOfElementsPerStep, reverse);
         }
 
         /// <summary>
@@ -102,63 +104,51 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
         /// <param name="data">Parameters for item</param>
         /// <param name="siblingIndex">Index of this item in container (-1 by default). 0 - first; -1 - last.</param>
         /// <typeparam name="TElementType"><see cref="BaseDynamicUiElement{TElementType, TElementData}"/> - item with dynamic parameters initialization</typeparam>
-        public Coroutine AddItem(TElementData data, int siblingIndex = -1)
+        public async UniTask AddItem(TElementData data, int siblingIndex = -1)
         {
-            if (!HasItemWithData(data))
-            {
-                if (!SimplePool.IsPoolForObjectsExist(PoolName))
-                    SimplePool.CreatePool(PoolName);
+            if (HasItemWithData(data))
+                throw new InvalidOperationException(
+                    "There is already presented this data with linked item in this container!");
+            
+            if (!SimplePool.IsPoolForObjectsExist(PoolName))
+                SimplePool.CreatePool(PoolName);
 
-                return StartCoroutine(AddItemProcess(data, siblingIndex));
-            }
-
-            throw new InvalidOperationException("There is already presented this data with linked item in this container!");
+            await AddItemProcess(data, siblingIndex);
         }
 
         /// <summary>
         /// Removes specified item from the container and deletes it's data.
         /// </summary>
-        public Coroutine RemoveItem(TElementType item)
+        public async UniTask RemoveItem(TElementType item)
         {
-            if (HasItem(item))
-            {
-                return StartCoroutine(RemoveItemProcess(item));
-            }
-
-            throw new InvalidOperationException("There is no such item in this container!");
+            if (!HasItem(item)) 
+                throw new InvalidOperationException("There is no such item in this container!");
+            
+            await RemoveItemProcess(item);
         }
 
         /// <summary>
         /// Removes specified item from the container and deletes it's data.
         /// </summary>
-        public Coroutine RemoveItem(TElementData itemData)
+        public async UniTask RemoveItem(TElementData itemData)
         {
-            try
-            {
-                if (HasItemWithData(itemData))
-                {
-                    if (itemData.Item != null)
-                        return StartCoroutine(RemoveItemProcess(_itemsInContainer[itemData.Item.GetInstanceID()]));
-                }
-
+            if (itemData.Item == null)
                 throw new NullReferenceException("There is no any item linked with this data!");
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new KeyNotFoundException("There is no item linked with this data in this container!");
-            }
+            if (!HasItemWithData(itemData))
+                throw new NullReferenceException("There is no any item linked with this data!");
+
+            await RemoveItemProcess(_itemsInContainer[itemData.Item.GetInstanceID()]);
         }
 
-        public Coroutine ReplaceItemData([NotNull] TElementType item, [NotNull] TElementData newData)
+        public async UniTask ReplaceItemData([NotNull] TElementType item, [NotNull] TElementData newData)
         {
-            try
+            if (_itemsInContainer.ContainsKey(item.GetInstanceID()))
             {
-                return StartCoroutine(ReplaceItemDataProcess(_itemsInContainer[item.GetInstanceID()], newData));
+                await ReplaceItemDataProcess(_itemsInContainer[item.GetInstanceID()], newData);
             }
-            catch (KeyNotFoundException)
+            else
             {
-                Debug.LogError("[GenericDynamicContainer.ReplaceItemData] There is no such item in this container!");
-                throw;
+                LogHelper.LogError("There is no such item in this container!", nameof(ReplaceItemData));
             }
         }
 
@@ -179,19 +169,21 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
         /// <summary>
         /// Clears all container form items with animation that is defined by items one by one.
         /// </summary>
-        public Coroutine AwaitClearInOrder()
+        public async UniTask ClearInOrder()
         {
+            // TODO: CRITICAL! Stop all async operations here
             StopAllCoroutines();
-            return CoroutineHelper.RestartCoroutine(ref ClearInOrderProcess, AwaitClearInOrderProcess(), this);
+            await AwaitClearInOrderProcess();
         }
 
         /// <summary>
         /// Clears all container from items with animation that is defined by items.
         /// </summary>
-        public Coroutine AwaitClear()
+        public async UniTask Clear()
         {
+            // TODO: CRITICAL! Stop all async operations here
             StopAllCoroutines();
-            return CoroutineHelper.RestartCoroutine(ref ClearProcess, AwaitClearProcess(), this);
+            await AwaitClearProcess();
         }
 
         /// <summary>
@@ -209,7 +201,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             _itemsDataDictionary.Clear();
         }
 
-        public void ClearAndDestroyPool()
+        public void ForceClearAndDestroyPool()
         {
             foreach (var item in _itemsInContainer)
             {
@@ -222,7 +214,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             _itemsDataDictionary.Clear();
         }
 
-        protected IEnumerator UpdateItemsProcess(IEnumerable<TElementData> data,
+        private async UniTask UpdateItemsProcess(IEnumerable<TElementData> data,
             int numberOfElementsPerStep, bool reverse)
         {
             var objectsData = data.ToArray();
@@ -247,7 +239,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
                 {
                     if (!HasItemWithData(objectsData[i]))
                     {
-                        StartCoroutine(AddItemProcess(objectsData[i], -1));
+                        // Do not wait
+                        AddItemProcess(objectsData[i], -1);
                     }
                     else
                     {
@@ -258,7 +251,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
                 // Waiting enabling of the last element in step
                 if (!HasItemWithData(objectsData[i]))
                 {
-                    yield return StartCoroutine(AddItemProcess(objectsData[i], -1));
+                    await AddItemProcess(objectsData[i], -1);
                 }
                 else
                 {
@@ -272,7 +265,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             }
         }
 
-        protected IEnumerator AddItemProcess(TElementData data, int siblingIndex)
+        private async UniTask AddItemProcess(TElementData data, int siblingIndex)
         {
             var item = SimplePool.Get(prefab, layoutToContainItems.transform, PoolName);
 
@@ -285,30 +278,30 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             item.Init(data);
             _itemsInContainer.Add(item.GetInstanceID(), item);
             _itemsDataDictionary.Add(item.GetInstanceID(), data);
-            yield return item.Enable();
+            await item.Enable();
         }
 
-        protected IEnumerator RemoveItemProcess(TElementType item)
+        private async UniTask RemoveItemProcess(TElementType item)
         {
-            yield return item.Disable();
+            await item.Disable();
             SimplePool.Return(item, PoolName);
             _itemsDataDictionary.Remove(item.GetInstanceID());
             _itemsInContainer.Remove(item.GetInstanceID());
         }
 
-        protected IEnumerator ReplaceItemDataProcess(TElementType item, TElementData newData)
+        private async UniTask ReplaceItemDataProcess(TElementType item, TElementData newData)
         {
-            yield return item.Disable();
+            await item.Disable();
             _itemsDataDictionary[item.GetInstanceID()] = newData;
             item.Init(newData);
-            yield return item.Enable();
+            await item.Enable();
         }
 
-        protected IEnumerator AwaitClearInOrderProcess()
+        private async UniTask AwaitClearInOrderProcess()
         {
             foreach (var item in _itemsInContainer)
             {
-                yield return item.Value.Disable();
+                await item.Value.Disable();
                 SimplePool.Return(item.Value, PoolName);
             }
 
@@ -316,9 +309,9 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             _itemsDataDictionary.Clear();
         }
 
-        protected IEnumerator AwaitClearProcess()
+        private async UniTask AwaitClearProcess()
         {
-            if (_itemsInContainer.Count == 0) yield break;
+            if (_itemsInContainer.Count == 0) return;
 
             var last = _itemsInContainer.Last().Value;
             foreach (var item in _itemsInContainer.Where(item => !ReferenceEquals(last, item.Value)))
@@ -326,7 +319,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
                 item.Value.Disable();
             }
 
-            yield return last.Disable();
+            await last.Disable();
 
             foreach (var item in _itemsInContainer)
             {

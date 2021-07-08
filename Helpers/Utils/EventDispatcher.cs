@@ -5,7 +5,7 @@ using UnityEngine;
 using UniversalUnity.Helpers.Coroutines;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
 
-namespace UniversalUnity.Helpers.NoCategory
+namespace UniversalUnity.Helpers.Utils
 {
     public class EventDispatcher : GenericSingleton<EventDispatcher>
     {

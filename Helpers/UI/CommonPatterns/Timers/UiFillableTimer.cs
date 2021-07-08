@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using UniversalUnity.Helpers.UI.CommonPatterns.FillableElement;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
@@ -7,12 +8,11 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
     {
         [SerializeField] protected UiFillableLine uiFillableLine;
         
-        protected override Coroutine UiHandleTimer(float durationInMillis)
+        protected override async UniTask UiHandleTimer(float durationInMillis)
         {
             uiFillableLine.ForceFill(0);
-            Enable();
-
-            return uiFillableLine.Fill(100,  uiFillableLine.maxAmount / (durationInMillis / 1000));
+            Enable().Forget();
+            await uiFillableLine.Fill(100,uiFillableLine.maxAmount / (durationInMillis / 1000));
         }
     }
 }

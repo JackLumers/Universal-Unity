@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Random = System.Random;
 
-namespace UniversalUnity.Helpers.NoCategory
+namespace UniversalUnity.Helpers.Extensions
 {
     public class ShuffledList<T>
     {

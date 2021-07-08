@@ -5,7 +5,7 @@ using UnityEngine;
 namespace UniversalUnity.Helpers.ScriptableObjects
 {
     [CreateAssetMenu(fileName = "NewScriptablePrefabInstance", menuName = "ScriptableObjects/ScriptablePrefabInstance")]
-    public class ScriptablePrefabInstance : ScriptableObject
+    public class ScriptablePrefab : ScriptableObject
     {
         [SerializeField] private GameObject prefab;
         [NonSerialized] private GameObject _prefabInstance;
@@ -26,9 +26,17 @@ namespace UniversalUnity.Helpers.ScriptableObjects
         public GameObject Get()
         {
             if (_prefabInstance != null) return _prefabInstance;
-            
+
             _prefabInstance = Instantiate(prefab);
             return _prefabInstance;
+        }
+
+        public void Return()
+        {
+            if (_prefabInstance != null)
+            {
+                Destroy(_prefabInstance);
+            }
         }
     }
 }

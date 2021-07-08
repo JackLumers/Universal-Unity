@@ -8,8 +8,9 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
+using UniversalUnity.Helpers.Parsing.UsingFileHelpers;
 
-namespace UniversalUnity.Helpers.Parsing.UsingFileHelpers
+namespace UniversalUnity.Helpers.Utils.BannedWordsFilter
 {
     public class SwearingManager : GenericSingleton<SwearingManager>
     {

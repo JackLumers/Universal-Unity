@@ -1,27 +1,25 @@
 ﻿using System;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using UniversalUnity.Helpers.Logs;
 
-namespace UniversalUnity.Helpers.NoCategory
+namespace UniversalUnity.Helpers.Extensions
 {
     public static class StringOperationsHelper
     {
-        public static string CutString(string text, int maxTextSize)
+        public static string Cut(this string text, int maxTextSize)
         {
             if (text.Length <= maxTextSize) return text;
             return string.Concat(text.Substring(0, maxTextSize).Trim(' '), "...");
         }
         
-        public static int FitStringInField(string text, Text textField)
+        public static void FitStringInField(this string text, Text textField)
         {
             var maxTextSize = GetStingMaxSizeToFitInField(text, textField);
-            textField.text = CutString(text, maxTextSize);
-            return maxTextSize;
+            textField.text = Cut(text, maxTextSize);
         }
 
-        public static int GetStingMaxSizeToFitInField(string text, Text textField)
+        public static int GetStingMaxSizeToFitInField(this string text, Text textField)
         {
             textField.text = text;
             textField.font.RequestCharactersInTexture(textField.text, textField.fontSize, textField.fontStyle);

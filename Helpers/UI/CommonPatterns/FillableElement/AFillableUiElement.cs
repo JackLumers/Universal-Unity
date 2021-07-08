@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Reflection;
-using JetBrains.Annotations;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.UI.BaseUiElements;
@@ -23,22 +22,16 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             ForceFill(initialAmount);
         }
 
-        public Coroutine Fill(float amount, float amountPerSecond = 100f, bool fillOnEvenAmount = false, [CanBeNull] Action onFilled = null)
+        public async UniTask Fill(float amount, float amountPerSecond = 100f, bool fillOnEvenAmount = false)
         {
             if(!IsInitialized) InitComponents();
             amount = ClampAmount(amount);
 
-            // Don't fill if aready filled on this amount OR ! pass if fillOnEvenAmount = true !
+            // Don't fill if already filled on this amount OR pass if fillOnEvenAmount = true
             if (fillOnEvenAmount || (Math.Abs(FilledAmount - amount) > Single.Epsilon))
             {
-                var onFill = OnFill(amount, amountPerSecond, onFilled);
                 FilledAmount = amount;
-                return onFill;
-            }
-            else
-            {
-                //return CoroutineHelper.Skip(this);
-                return null;
+                await OnFill(amount, amountPerSecond);
             }
         }
 
@@ -51,8 +44,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             FilledAmount = amount;
         }
 
-        protected abstract Coroutine OnFill(float amount, float amountPerSecond, [CanBeNull] Action onFilled);
-
+        protected abstract UniTask OnFill(float amount, float amountPerSecond);
+        
         protected abstract void OnForceFill(float amount);
 
         private float ClampAmount(float amount)

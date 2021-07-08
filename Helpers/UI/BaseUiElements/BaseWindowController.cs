@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
@@ -13,33 +13,22 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         [SerializeField] [CanBeNull] 
         protected BaseInteractableUiElement closeButton;
 
-        public event Action OnClosed;
-        public event Action OnOpened;
-        
         public bool IsOpened => uiContainer.IsEnabled;
 
         protected override void InheritAwake()
         {
             base.InheritAwake();
-            if (!(closeButton is null)) closeButton.OnClick += OnCloseButtonClick;
+            if (!(closeButton is null)) closeButton.OnClick += async () => await Close();
         }
 
-        public virtual Coroutine Open([CanBeNull] Action onOpened = null)
+        public virtual async UniTask Open()
         {
-            return uiContainer.Enable(() =>
-            {
-                OnOpened?.Invoke();
-                onOpened?.Invoke();
-            });
+            await uiContainer.Enable();
         }
 
-        public virtual Coroutine Close([CanBeNull] Action onClosed = null)
+        public virtual async UniTask Close()
         {
-            return uiContainer.Disable(() =>
-            {
-                OnClosed?.Invoke();
-                onClosed?.Invoke();
-            });
+            await uiContainer.Disable();
         }
 
         public virtual void ForceClose()
@@ -51,20 +40,10 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         {
             uiContainer.ForceEnable();
         }
-        
-        public void RunClose()
-        {
-            Close();
-        }
 
         public void SetClosable(bool closable)
         {
             closeButton?.Enable(closable);
-        }
-        
-        protected virtual void OnCloseButtonClick()
-        {
-            Close();
         }
     }
 }

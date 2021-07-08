@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace UniversalUnity.Helpers.Saves
+namespace UniversalUnity.Helpers.Utils
 {
     public static class PlayerPrefsManager
     {
@@ -11,14 +11,6 @@ namespace UniversalUnity.Helpers.Saves
         private const string SoundEffectsVolume = "SoundEffectsVolume";
         private const string VoiceVolume = "VoiceVolume";
         private const string NotificationEnable = "NotificationEnable";
-
-        // Temporary values. Remove when it was be done on server.
-        private const string LastCinemaWatchYear = "LastCinemaWatchYear";
-        private const string LastCinemaWatchMonth = "LastCinemaWatchMonth";
-        private const string LastCinemaWatchDay = "LastCinemaWatchDay";
-        private const string LastCinemaWatchHour = "LastCinemaWatchHour";
-        private const string LastCinemaWatchMinute = "LastCinemaWatchMinute";
-        private const string LastCinemaWatchSecond = "LastCinemaWatchSecond";
 
         public static string SavedTextLanguage
         {
@@ -54,38 +46,6 @@ namespace UniversalUnity.Helpers.Saves
         {
             get => PlayerPrefs.GetFloat(VoiceVolume, 0.9f);
             set => PlayerPrefs.SetFloat(VoiceVolume, value);
-        }
-
-        // Temporary methods. Remove when it was be done on server.
-        public static int SavedLastCinemaWatchYear
-        {
-            get => PlayerPrefs.GetInt(LastCinemaWatchYear, 2021);
-            set => PlayerPrefs.SetInt(LastCinemaWatchYear, value);
-        }
-        public static int SavedLastCinemaWatchMonth
-        {
-            get => PlayerPrefs.GetInt(LastCinemaWatchMonth, 2);
-            set => PlayerPrefs.SetInt(LastCinemaWatchMonth, value);
-        }
-        public static int SavedLastCinemaWatchDay
-        {
-            get => PlayerPrefs.GetInt(LastCinemaWatchDay, 1);
-            set => PlayerPrefs.SetInt(LastCinemaWatchDay, value);
-        }
-        public static int SavedLastCinemaWatchHour
-        {
-            get => PlayerPrefs.GetInt(LastCinemaWatchHour, 0);
-            set => PlayerPrefs.SetInt(LastCinemaWatchHour, value);
-        }
-        public static int SavedLastCinemaWatchMinute
-        {
-            get => PlayerPrefs.GetInt(LastCinemaWatchMinute, 0);
-            set => PlayerPrefs.SetInt(LastCinemaWatchMinute, value);
-        }
-        public static int SavedLastCinemaWatchSecond
-        {
-            get => PlayerPrefs.GetInt(LastCinemaWatchSecond, 0);
-            set => PlayerPrefs.SetInt(LastCinemaWatchSecond, value);
         }
 
         public static float GetSavedVolumeForSource(AudioManager.AudioManager.EAudioSource sourceType)
