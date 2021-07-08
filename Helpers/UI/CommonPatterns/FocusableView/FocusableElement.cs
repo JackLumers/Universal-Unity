@@ -8,7 +8,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
 
         public bool Focused
         {
-            get { return _focused; }
+            get => _focused;
             set
             {
                 _focused = value;

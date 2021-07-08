@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UniversalUnity.Helpers.Extensions;
 using UniversalUnity.Helpers.Localization.Enums;
 using UniversalUnity.Helpers.Localization.UsingFileHelpers;
-using UniversalUnity.Helpers.NoCategory;
 using UniversalUnity.Helpers.Parsing.UsingFileHelpers;
-using UniversalUnity.Helpers.Saves;
+using UniversalUnity.Helpers.Utils;
 using CsvParser = UniversalUnity.Helpers.Parsing.UsingFileHelpers.CsvParser;
 
 namespace UniversalUnity.Helpers.Localization
@@ -150,7 +150,7 @@ namespace UniversalUnity.Helpers.Localization
                 {
                     var csvAsset = (TextAsset)LocalizationAssetReferences[i].Asset;
                     
-                    _localizedEntities = DictionaryOperationsHelper.Merge(_localizedEntities, 
+                    _localizedEntities = DictionaryExtensions.Merge(_localizedEntities, 
                         CsvParser.ParseLightweight(csvAsset, new LightweightLocalizedEntityFactory(GameTextLanguage)));
                     
                     IncrementAndCheckParsing();
@@ -166,7 +166,7 @@ namespace UniversalUnity.Helpers.Localization
                 Handles[LocalizationAssetReferences[i1]].Completed += (handle) =>
                 {
                     var csvAsset = handle.Result;
-                    _localizedEntities = DictionaryOperationsHelper.Merge(_localizedEntities, 
+                    _localizedEntities = DictionaryExtensions.Merge(_localizedEntities, 
                         CsvParser.ParseLightweight(csvAsset, new LightweightLocalizedEntityFactory(GameTextLanguage)));
                     IncrementAndCheckParsing();
                 };

@@ -5,7 +5,7 @@ using UniversalUnity.Helpers.UI.BaseUiElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
 {
-    public class NewUIDialog : BaseUiElement
+    public class UiDialog : BaseUiElement
     {
         [Header("Dialog Fields")]
         [SerializeField] public BaseUiElement dialog;
@@ -15,6 +15,38 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         [SerializeField] protected BaseInteractableUiElement declineButton;
         [SerializeField] protected BaseInteractableUiElement backgroundButton;
 
+        public async UniTask ChangeText(string text)
+        {
+            dialog.Enable().Forget();
+            await messageTextElement.ShowText(text);
+        }
+        
+        public async UniTask ChangeHeaderText(string text)
+        {
+            dialog.Enable().Forget();
+            await headerTextElement.ShowText(text);
+        }
+
+        public async UniTask EnableBackground(bool enable)
+        {
+            await backgroundButton.Enable(enable);
+        }
+        
+        public async UniTask EnableDialog(bool enable)
+        {
+            await dialog.Enable(enable);
+        }
+
+        public async UniTask EnableAcceptButton(bool enable)
+        {
+            await acceptButton.Enable(enable);
+        }
+        
+        public async UniTask EnableDeclineButton(bool enable)
+        {
+            await declineButton.Enable(enable);
+        }
+        
         public void SetHeaderText(string text)
         {
             headerTextElement.Text = text;
@@ -24,7 +56,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         {
             messageTextElement.Text = text;
         }
-
+        
         public void AddBackgroundAction(Action action)
         {
             backgroundButton.OnClick += action.Invoke;
@@ -35,16 +67,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
             backgroundButton.OnClick -= action.Invoke;
         }
 
-        public void EnableBackground(bool enable)
-        {
-            backgroundButton.Enable(enable);
-        }
-        
-        public void EnableDialog(bool enable)
-        {
-            dialog.Enable(enable);
-        }
-        
         public void AddAcceptAction(Action action)
         {
             acceptButton.OnClick += action.Invoke;
@@ -64,17 +86,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         {
             declineButton.OnClick += action.Invoke;
         }
-
-        public async UniTask EnableAcceptButton(bool enable)
-        {
-            await acceptButton.Enable(enable);
-        }
         
-        public async UniTask EnableDeclineButton(bool enable)
-        {
-            await declineButton.Enable(enable);
-        }
-
         public void ClearActions()
         {
             declineButton.ClearOnClickEvents();

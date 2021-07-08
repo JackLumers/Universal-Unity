@@ -5,6 +5,13 @@ namespace UniversalUnity.Helpers.MonoBehaviourExtenders
 {
     /// <summary>
     /// Inherit from this class if you need a component that has instance you want to refer later.
+    /// <remarks>
+    /// !!!
+    ///                             
+    /// USE THIS ONLY IN CASE YOU CANT USE SERIALIZED OBJECTS SOMEHOW
+    ///                            
+    /// !!!
+    /// </remarks>
     /// </summary>
     public abstract class GenericSingleton<T> : CachedMonoBehaviour where T : Component
     {

@@ -11,7 +11,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
         protected override async UniTask UiHandleTimer(float durationInMillis)
         {
             uiFillableLine.ForceFill(0);
-            UniTask.Run(() => Enable());
+            Enable().Forget();
             await uiFillableLine.Fill(100,uiFillableLine.maxAmount / (durationInMillis / 1000));
         }
     }

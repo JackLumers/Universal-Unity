@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace UniversalUnity.Helpers.Coroutines
 {
+    /// <summary>
+    /// IT WILL BE DELETED. Use UniTasks instead of coroutines.
+    /// </summary>
     public static class CoroutineHelper
     {
         /// <summary>

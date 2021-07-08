@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UniversalUnity.Helpers.NoCategory;
 
 namespace UniversalUnity.Helpers.Localization.Components
 {
@@ -27,7 +26,6 @@ namespace UniversalUnity.Helpers.Localization.Components
         private void SetLocalizedText()
         {
             _text = LocalizationManager.GetText(textId);
-            StringOperationsHelper.FitStringInField(_text, _textComponent);
         }
     }
 }

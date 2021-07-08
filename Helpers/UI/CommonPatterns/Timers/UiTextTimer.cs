@@ -7,14 +7,14 @@ using UniversalUnity.Helpers.UI.BaseUiElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 {
-    public class UiClassicTimer : BaseUiTimer
+    public class UiTextTimer : BaseUiTimer
     {
         [SerializeField] protected BaseTextUiElement timerText = null;
         
         public bool animateNumberChanging = true;
         public string timeFormat = @"mm\:ss";
 
-        protected CancellationTokenSource timerCancellationTokenSource = new CancellationTokenSource();
+        protected CancellationTokenSource TimerCancellationTokenSource = new CancellationTokenSource();
         
         protected override void InheritAwake()
         {
@@ -23,14 +23,14 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 
         protected override async UniTask UiHandleTimer(float durationInMillis)
         {
-            UniTask.Run(() => Enable());
-            UniTask.Run(() => timerText.Enable());
+            Enable().Forget();
+            timerText.Enable().Forget();
 
-            timerCancellationTokenSource.Cancel();
-            timerCancellationTokenSource = new CancellationTokenSource();
+            TimerCancellationTokenSource.Cancel();
+            TimerCancellationTokenSource = new CancellationTokenSource();
             
             timerText.Text = TimeSpan.FromMilliseconds(durationInMillis).ToString(timeFormat);
-            await TimerProcess(durationInMillis - durationInMillis % 1000, timerCancellationTokenSource.Token);
+            await TimerProcess(durationInMillis - durationInMillis % 1000, TimerCancellationTokenSource.Token);
         }
         
         protected virtual async UniTask TimerProcess(float timerStartMillis, CancellationToken cancellationToken)

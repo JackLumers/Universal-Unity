@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections;
-using Cysharp.Threading.Tasks;
-using JetBrains.Annotations;
+﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using UniversalUnity.Helpers.Coroutines;
 
 namespace UniversalUnity.Helpers.UI.BaseUiElements
 {
@@ -12,8 +8,6 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
     {
         [Header("= BaseTextUiElement Fields =")]
         [SerializeField] public Text textComponent = null;
-
-        private Coroutine _textChangingCoroutine;
 
         public string Text
         {
