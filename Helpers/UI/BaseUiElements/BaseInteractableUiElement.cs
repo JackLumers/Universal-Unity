@@ -47,13 +47,11 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         #endregion
 
         #region Public API
-
-        public delegate void OnClickHandler();
-
+        
         /// <summary>
         /// Event that is called when <see cref="PrivateClick"/> called after <see cref="ProtectedOnClick"/>.
         /// </summary>
-        public event OnClickHandler OnClick;
+        public event Action OnClick;
 
         /// <summary>
         /// Clears all method groups that is linked with the <see cref="OnClick"/> event.

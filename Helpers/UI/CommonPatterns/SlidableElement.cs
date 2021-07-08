@@ -42,7 +42,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             base.InheritAwake();
             if (!ReferenceEquals(openPanelButton, null))
             {
-                openPanelButton.OnClick += () => Switch();
+                openPanelButton.OnClick += async () => await Switch();
             }
         }
         
@@ -96,10 +96,11 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
                     UniTask.Run(() =>
                     {
                         _isOpened = true;
-                        Animator.SetTrigger(_openTrigger);
-                        UniTask.Yield(PlayerLoopTiming.Update);
-                        UniTask.Delay(Animator.GetCurrentAnimatorClipInfo(0).Length, 
-                            cancellationToken: _movingCancellationTokenSource.Token);
+                        // TODO: Add slide logic
+                        // Animator.SetTrigger(_openTrigger);
+                        // UniTask.Yield(PlayerLoopTiming.Update);
+                        // UniTask.Delay(Animator.GetCurrentAnimatorClipInfo(0).Length, 
+                        //     cancellationToken: _movingCancellationTokenSource.Token);
                         onOpened?.Invoke();
                     }));
             }
@@ -119,10 +120,11 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
                     UniTask.Run(() =>
                     {
                         _isOpened = true;
-                        Animator.SetTrigger(_closeTrigger);
-                        UniTask.Yield(PlayerLoopTiming.Update);
-                        UniTask.Delay(Animator.GetCurrentAnimatorClipInfo(0).Length, 
-                            cancellationToken: _movingCancellationTokenSource.Token);
+                        // TODO: Add slide logic
+                        // Animator.SetTrigger(_closeTrigger);
+                        // UniTask.Yield(PlayerLoopTiming.Update);
+                        // UniTask.Delay(Animator.GetCurrentAnimatorClipInfo(0).Length, 
+                        //     cancellationToken: _movingCancellationTokenSource.Token);
                         onClosed?.Invoke();
                     }));
             }

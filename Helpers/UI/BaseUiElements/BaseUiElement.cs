@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
 using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
@@ -14,16 +15,13 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
     /// Base class for all UI elements.
     /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
-    [RequireComponent(typeof(Animator))]
     public class BaseUiElement : CachedMonoBehaviour
     {
         [Header("= Base UI Element Fields =")]
         protected CanvasGroup CanvasGroup;
-        protected Animator Animator;
-
-        protected readonly Dictionary<string, AnimationClip> AnimationClips = new Dictionary<string, AnimationClip>();
 
         private CancellationTokenSource _enableCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _disableCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _movingCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _alphaChangeCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _rotationCancellationTokenSource = new CancellationTokenSource();
@@ -34,8 +32,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         public bool IsEnabled { get; protected set; }
         
         public bool WasEnabled { get; protected set; }
-        
-        public float EnableAnimationTime { get; set; }
+
+        public float EnableAnimationTime { get; set; } = 0.5f;
         
         private void Awake()
         {
@@ -48,7 +46,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         }
 
         /// <summary>
-        /// Called ONCE after <see cref="Awake"/> or in <see cref="Enable"/>, <see cref="Disable"/> methods, if was not called before.
+        /// Called ONCE after <see cref="Awake"/> or in <see cref="Enable(bool)"/>, <see cref="Disable"/> methods, if was not called before.
         /// Initialize here components or any other objects that is not changing references later.
         /// <para>Must be called in inheritors before using any methods or fields!</para>
         /// <remarks>Also can be called again if <see cref="DeInitAndRefresh"/> was called.</remarks>
@@ -58,18 +56,13 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             if (!IsInitialized)
             {
                 CanvasGroup = GetComponent<CanvasGroup>();
-                Animator = GetComponent<Animator>();
-
-                foreach (var animationClip in Animator.runtimeAnimatorController.animationClips)
-                {
-                    AnimationClips.Add(animationClip.name, animationClip);
-                }
                 
                 IsInitialized = true;
                 
                 InheritInitComponents();
-                
-                if (!calledByEnable && !WasEnabled && CanvasGroup.alpha > 0.99 && gameObject.activeInHierarchy) Enable();
+
+                if (!calledByEnable && !WasEnabled && CanvasGroup.alpha > 0.99 && gameObject.activeInHierarchy) 
+                    Enable().Forget();
             }
             else
             {
@@ -168,15 +161,15 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             
         }
         
-        public async UniTask Enable(bool enable, bool forceSwitchBlockInput)
+        public async UniTask EnableOrDisable(bool enable, bool forceBlockInputSwitch)
         {
             switch (enable)
             {
                 case true:
-                    await Enable(forceSwitchBlockInput);
+                    await Enable(forceBlockInputSwitch);
                     break;
                 case false:
-                    await Disable(forceSwitchBlockInput);
+                    await Disable(forceBlockInputSwitch);
                     break;
             }
         }
@@ -204,6 +197,10 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
                 InitComponents(true);
             }
 
+            _disableCancellationTokenSource.Cancel();
+            _enableCancellationTokenSource.Cancel();
+            _enableCancellationTokenSource = new CancellationTokenSource();
+            
             if (!WasEnabled)
             {
                 WasEnabled = true;
@@ -216,17 +213,16 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             gameObject.SetActive(true);
             if (forceEnableInput) InteractionBlock("Disabled", false, true);
             IsEnabled = true;
+            
+            var task = CanvasGroup
+                .DOFade(1, EnableAnimationTime)
+                .WithCancellation(_enableCancellationTokenSource.Token);
+            await task;
 
-            Animator.Play(AnimationConstants.GetAnimatorHash(AnimationParamNames.Enabling));
-
-            var millis = AnimationClips[AnimationParamNames.Enabling.ToString()].length * 1000;
-            var speed = Animator.speed;
-            _enableCancellationTokenSource.Cancel();
-            _enableCancellationTokenSource = new CancellationTokenSource();
-            await UniTask.Delay((int) (millis * speed),
-                cancellationToken: _enableCancellationTokenSource.Token);
-
-            OnEnabled();
+            if (!_enableCancellationTokenSource.IsCancellationRequested)
+            {
+                OnEnableComplete();
+            }
         }
 
         /// <summary>
@@ -238,22 +234,23 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             {
                 return;
             }
-
+            
             if (!IsInitialized) InitComponents();
             if (forceDisableInput) InteractionBlock("Disabled", true, true);
             IsEnabled = false;
-            Animator.Play(AnimationConstants.GetAnimatorHash(AnimationParamNames.Enabling));
-
-            var millis = AnimationClips[AnimationParamNames.Disabling.ToString()].length * 1000;
-            var speed = Animator.speed;
-
+            
             _enableCancellationTokenSource.Cancel();
-            _enableCancellationTokenSource = new CancellationTokenSource();
-            await UniTask.Delay((int) (millis * speed),
-                cancellationToken: _enableCancellationTokenSource.Token);
-
-            gameObject.SetActive(false);
-            OnDisabled();
+            _disableCancellationTokenSource.Cancel();
+            _disableCancellationTokenSource = new CancellationTokenSource();
+            var task = CanvasGroup
+                .DOFade(0, EnableAnimationTime)
+                .WithCancellation(_disableCancellationTokenSource.Token);
+            await task;
+            
+            if (!_disableCancellationTokenSource.IsCancellationRequested)
+            {
+                OnDisableComplete();
+            }
         }
 
         public void ForceDisable()
@@ -285,15 +282,17 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             CanvasGroup.alpha = 1;
         }
         
-        protected virtual void OnEnabled()
+        protected virtual void OnEnableComplete()
         {
+            LogHelper.LogInfo("Enabled!", nameof(OnDisableComplete));
             InteractionBlock("Disabled", false, true);
         }
-        
-        protected virtual void OnDisabled()
+
+        protected virtual void OnDisableComplete()
         {
-            InteractionBlock("Disabled", true, true);
+            LogHelper.LogInfo("Disabled!", nameof(OnDisableComplete));
             gameObject.SetActive(false);
+            InteractionBlock("Disabled", true, true);
         }
 
         public async UniTask Move(Vector3 targetLocalPosition, float timeOrSpeed, bool fixedTime, [CanBeNull] AnimationCurve curve)
