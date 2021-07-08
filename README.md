@@ -5,6 +5,8 @@ Scripts for easyer game development in Unity. Not properly documented yet and al
 Install all dependencies and add to your Unity project as a submodule. 
 Recommended path: Assets/UniversalUnity
 
+Later I'll release package as a Unity package.
+
 # Dependencies
 Unity packages:
 - Unity [Addressables](https://docs.unity3d.com/Manual/com.unity.addressables.html)
