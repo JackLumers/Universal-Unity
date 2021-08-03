@@ -5,6 +5,7 @@ Scripts for easyer game development in Unity. Not properly documented yet and al
 
 # Installing
 Install all dependencies and add to your Unity project as a submodule AFTER INSTALLING ALL DEPENDENCIES.
+
 Recommended path: Assets/UniversalUnity
 
 Later I'll release package as a Unity package.
