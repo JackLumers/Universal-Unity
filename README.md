@@ -1,5 +1,6 @@
 # Universal-Unity
 Scripts for easyer game development in Unity. Not properly documented yet and also can depend on other frameworks, I'll work on that later.
+Expect breaking API changes!
 
 [Russian fast-written doc for innner usage](https://docs.google.com/document/d/15KHWurD4m-SBTkwx2fv_B5KpM4ONifXPUAMkMnKCq7I/edit?usp=sharing)
 
