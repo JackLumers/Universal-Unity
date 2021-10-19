@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -11,6 +12,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
     {
         private bool _destroyed;
         private System.Timers.Timer _timer;
+
+        private CancellationTokenSource _cancellationTokenSource;
         
         protected override void InheritAwake()
         {
@@ -25,6 +28,10 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 
         public async UniTask StartTimer(float durationInMillis, [CanBeNull] Action onDone = null)
         {
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = new CancellationTokenSource();
+            
             if (durationInMillis < 0)
             {
                 LogHelper.LogError("Argument out of range! Must be >= 0.",
@@ -38,9 +45,9 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
             _timer.AutoReset = false;
             _timer.Elapsed += (sender, args) => HandleTimer(onDone);
 
-            await UiHandleTimer(durationInMillis);
+            await UiHandleTimer(durationInMillis).AttachExternalCancellation(_cancellationTokenSource.Token);
         }
-
+        
         protected abstract UniTask UiHandleTimer(float durationInMillis);
 
         private void HandleTimer([CanBeNull] Action onDone)

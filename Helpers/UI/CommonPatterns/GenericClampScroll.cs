@@ -30,8 +30,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
 
         private void Awake()
         {
-            if (nextPageButton != null) nextPageButton.OnClick += () => Scroll(true);
-            if (previousPageButton != null) previousPageButton.OnClick += () => Scroll(false);
+            if (nextPageButton != null) nextPageButton.OnClick += () => Scroll(true).Forget();
+            if (previousPageButton != null) previousPageButton.OnClick += () => Scroll(false).Forget();
         }
 
         public void InitData(Dictionary<string, TElementData> data)
