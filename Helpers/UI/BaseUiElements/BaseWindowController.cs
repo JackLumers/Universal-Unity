@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
@@ -13,6 +14,11 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         [SerializeField] [CanBeNull] 
         protected BaseInteractableUiElement closeButton;
 
+        public event Action OnCloseCalled;
+        public event Action OnOpenCalled;
+        public event Action OnClosed;
+        public event Action OnOpened;
+        
         public bool IsOpened => uiContainer.IsEnabled;
 
         protected override void InheritAwake()
@@ -23,22 +29,30 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
 
         public virtual async UniTask Open()
         {
+            OnOpenCalled?.Invoke();
             await uiContainer.Enable();
+            OnOpened?.Invoke();
         }
 
         public virtual async UniTask Close()
         {
+            OnCloseCalled?.Invoke();
             await uiContainer.Disable();
+            OnClosed?.Invoke();
         }
 
         public virtual void ForceClose()
         {
+            OnCloseCalled?.Invoke();
             uiContainer.ForceDisable();
+            OnClosed?.Invoke();
         }
         
         public virtual void ForceOpen()
         {
+            OnOpenCalled?.Invoke();
             uiContainer.ForceEnable();
+            OnOpened?.Invoke();
         }
 
         public void SetClosable(bool closable)
