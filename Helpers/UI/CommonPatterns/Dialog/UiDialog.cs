@@ -9,7 +9,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
     public class UiDialog : BaseUiElement
     {
         [Header("Dialog Fields")]
-        [SerializeField] public BaseUiElement dialog;
         [SerializeField] protected BaseTextUiElement headerTextElement;
         [SerializeField] protected BaseTextUiElement messageTextElement;
         [SerializeField] protected BaseInteractableUiElement acceptButton;
@@ -17,29 +16,24 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
 
         public async UniTask ChangeText(string text)
         {
-            dialog.Enable().Forget();
+            Enable().Forget();
             await messageTextElement.ShowText(text);
         }
         
         public async UniTask ChangeHeaderText(string text)
         {
-            dialog.Enable().Forget();
+            Enable().Forget();
             await headerTextElement.ShowText(text);
         }
 
-        public async UniTask EnableDialog(bool enable)
+        public void SetAcceptButton(bool enable)
         {
-            await dialog.Enable(enable);
-        }
-
-        public async UniTask EnableAcceptButton(bool enable)
-        {
-            await acceptButton.Enable(enable);
+            acceptButton.ForceEnable(enable);
         }
         
-        public async UniTask EnableDeclineButton(bool enable)
+        public void SetDeclineButton(bool enable)
         {
-            await declineButton.Enable(enable);
+            declineButton.ForceEnable(enable);
         }
         
         public void SetHeaderText(string text)

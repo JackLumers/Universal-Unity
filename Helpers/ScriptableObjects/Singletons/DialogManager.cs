@@ -1,13 +1,12 @@
 ﻿using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
-using UnityEditor;
 using UnityEngine;
+using UniversalUnity.Helpers.MonoBehaviourExtenders;
 using UniversalUnity.Helpers.UI.CommonPatterns.Dialog;
 
 namespace UniversalUnity.Helpers.ScriptableObjects.Singletons
 {
-    [CreateAssetMenu(fileName = "DialogManager", menuName = "ScriptableObjects/Singletons/DialogManager")]
-    public class DialogManager : ScriptableSingleton<DialogManager>
+    public class DialogManager : GenericSingleton<DialogManager>
     {
         [SerializeField] private UiDialog dialogPrefab;
         
