@@ -1,8 +1,10 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.CommonPatterns.Timers;
 
 namespace UniversalUnity.Helpers.SceneLoading
 {
@@ -10,7 +12,8 @@ namespace UniversalUnity.Helpers.SceneLoading
     {
         [SerializeField] private BaseUiElement ui;
         [SerializeField] private BaseTextUiElement textElement;
-
+        [SerializeField] private BaseUiTimer timer;
+        
         private CancellationTokenSource _textChangingCancellationTokenSource = new CancellationTokenSource();
 
         public async UniTask Enable()
@@ -33,6 +36,17 @@ namespace UniversalUnity.Helpers.SceneLoading
             ui.ForceDisable();
         }
 
+        public void StartTimer(float durationInMillis)
+        {
+            ui.Enable();
+            timer.StartTimer(durationInMillis);
+        }
+        
+        public void StopTimer()
+        {
+            timer.StopTimer();
+        }
+        
         public async UniTask ShowText(string text)
         {
             _textChangingCancellationTokenSource.Cancel();
@@ -49,6 +63,12 @@ namespace UniversalUnity.Helpers.SceneLoading
             if(textElement.IsEnabled) await textElement.Disable();
             textElement.Text = text;
             await textElement.Enable();
+        }
+        
+        public void SetText(string text)
+        {
+            textElement.gameObject.SetActive(true);
+            textElement.Text = text;
         }
     }
 }

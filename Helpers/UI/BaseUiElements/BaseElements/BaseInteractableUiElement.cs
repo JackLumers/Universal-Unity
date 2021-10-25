@@ -47,6 +47,11 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         #endregion
 
         #region Public API
+
+        public void FireClick()
+        {
+            PrivateClick();
+        }
         
         /// <summary>
         /// Event that is called when <see cref="PrivateClick"/> called after <see cref="ProtectedOnClick"/>.

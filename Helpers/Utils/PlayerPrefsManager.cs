@@ -64,10 +64,5 @@ namespace UniversalUnity.Helpers.Utils
                     throw new ArgumentOutOfRangeException(nameof(sourceType), sourceType, null);
             }
         }
-
-        public static void Save()
-        {
-            PlayerPrefs.Save();
-        }
     }
 }

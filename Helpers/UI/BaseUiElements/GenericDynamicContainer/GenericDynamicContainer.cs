@@ -63,6 +63,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
 
         }
 
+        public int ItemsCount => _itemsInContainer.Count;
+
         public bool HasItem(TElementType item)
         {
             if (!ReferenceEquals(item, null))

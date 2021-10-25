@@ -22,12 +22,19 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 
         private void OnDestroy()
         {
-            _timer?.Dispose();
+            StopTimer();
             _destroyed = true;
+        }
+
+        private void OnDisable()
+        {
+            StopTimer();
         }
 
         public async UniTask StartTimer(float durationInMillis, [CanBeNull] Action onDone = null)
         {
+            Enable().Forget();
+            
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = new CancellationTokenSource();
@@ -46,6 +53,13 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
             _timer.Elapsed += (sender, args) => HandleTimer(onDone);
 
             await UiHandleTimer(durationInMillis).AttachExternalCancellation(_cancellationTokenSource.Token);
+        }
+        
+        public virtual void StopTimer()
+        {
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _timer?.Dispose();
         }
         
         protected abstract UniTask UiHandleTimer(float durationInMillis);

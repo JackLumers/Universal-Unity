@@ -25,7 +25,7 @@ namespace UniversalUnity.Helpers.SceneLoading
         {
             OnSceneLoadingEnded += (scene, mode) =>
             {
-                loadingScreen.Disable();
+                loadingScreen.Disable().Forget();
                 IsLoadingInProcess = false;
             };
         }

@@ -23,7 +23,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 
         protected override async UniTask UiHandleTimer(float durationInMillis)
         {
-            Enable().Forget();
             timerText.Enable().Forget();
 
             TimerCancellationTokenSource.Cancel();

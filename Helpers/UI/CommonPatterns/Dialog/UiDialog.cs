@@ -1,6 +1,7 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 using UniversalUnity.Helpers.UI.BaseUiElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
@@ -56,6 +57,11 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         {
             messageTextElement.Text = text;
         }
+
+        public void SetAcceptButtonText(string text)
+        {
+            acceptButton.GetComponent<Text>().text = text;
+        }
         
         public void AddBackgroundAction(Action action)
         {
@@ -92,6 +98,22 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
             declineButton.ClearOnClickEvents();
             acceptButton.ClearOnClickEvents();
             backgroundButton.ClearOnClickEvents();
+        }
+        
+        public UiDialog Instantiate(Transform parent = null)
+        {
+            var dialogInstance = Instantiate(this, parent);
+
+            dialogInstance.AddAcceptAction(
+                () =>
+                {
+                    dialogInstance
+                        .Disable()
+                        .ContinueWith(() => Destroy(dialogInstance));
+                });
+            
+            dialogInstance.Enable().Forget();
+            return dialogInstance;
         }
     }
 }

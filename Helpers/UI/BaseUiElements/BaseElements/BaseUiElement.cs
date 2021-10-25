@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -36,7 +37,12 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         
         public bool WasEnabled { get; protected set; }
 
-        public float EnableAnimationTime { get; set; } = 0.5f;
+        public float EnableAnimationTime { get; set; } = 0.25f;
+        
+        public event Action OnEnableCalled;
+        public event Action OnDisableCalled;
+        public event Action OnEnabled;
+        public event Action OnDisabled;
         
         private void Awake()
         {
@@ -199,6 +205,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             {
                 InitComponents(true);
             }
+            
+            OnEnableCalled?.Invoke();
 
             _disableCancellationTokenSource.Cancel();
             _enableCancellationTokenSource.Cancel();
@@ -224,7 +232,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
 
             if (!_enableCancellationTokenSource.IsCancellationRequested)
             {
-                OnEnableComplete();
+                OnEnableAnimationComplete();
             }
         }
 
@@ -237,10 +245,12 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             {
                 return;
             }
-            
+
             if (!IsInitialized) InitComponents();
             if (forceDisableInput) InteractionBlock("Disabled", true, true);
             IsEnabled = false;
+            
+            OnDisableCalled?.Invoke();
             
             _enableCancellationTokenSource.Cancel();
             _disableCancellationTokenSource.Cancel();
@@ -252,7 +262,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             
             if (!_disableCancellationTokenSource.IsCancellationRequested)
             {
-                OnDisableComplete();
+                OnDisableAnimationComplete();
             }
         }
 
@@ -264,6 +274,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             IsEnabled = false;
             CanvasGroup.alpha = 0;
             gameObject.SetActive(false);
+            OnDisableAnimationComplete();
         }
 
         public void ForceEnable()
@@ -283,19 +294,22 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             InteractionBlock("Disabled", false, true);
             IsEnabled = true;
             CanvasGroup.alpha = 1;
+            OnEnableAnimationComplete();
         }
         
-        protected virtual void OnEnableComplete()
+        protected virtual void OnEnableAnimationComplete()
         {
-            LogHelper.LogInfo("Enabled!", nameof(OnDisableComplete));
+            LogHelper.LogInfo("Enabled!", nameof(OnDisableAnimationComplete));
             InteractionBlock("Disabled", false, true);
+            OnEnabled?.Invoke();
         }
 
-        protected virtual void OnDisableComplete()
+        protected virtual void OnDisableAnimationComplete()
         {
-            LogHelper.LogInfo("Disabled!", nameof(OnDisableComplete));
+            LogHelper.LogInfo("Disabled!", nameof(OnDisableAnimationComplete));
             gameObject.SetActive(false);
             InteractionBlock("Disabled", true, true);
+            OnDisabled?.Invoke();
         }
 
         public async UniTask Move(Vector3 targetLocalPosition, float timeOrSpeed, bool fixedTime, [CanBeNull] AnimationCurve curve)

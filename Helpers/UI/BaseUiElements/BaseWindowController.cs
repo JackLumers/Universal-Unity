@@ -24,7 +24,12 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         protected override void InheritAwake()
         {
             base.InheritAwake();
-            if (!(closeButton is null)) closeButton.OnClick += async () => await Close();
+            if (!(closeButton is null)) closeButton.OnClick += OnCloseButtonClick;
+        }
+
+        protected virtual void OnCloseButtonClick()
+        {
+            Close().Forget();
         }
 
         public virtual async UniTask Open()
