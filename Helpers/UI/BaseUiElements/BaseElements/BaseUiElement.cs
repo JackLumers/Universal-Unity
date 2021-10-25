@@ -22,7 +22,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         protected CanvasGroup CanvasGroup;
 
         [SerializeField]
-        private float defaultEnableAnimationTime = 0.5f;
+        private float defaultEnableAnimationTime = 0.25f;
         
         private CancellationTokenSource _enableCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _disableCancellationTokenSource = new CancellationTokenSource();
