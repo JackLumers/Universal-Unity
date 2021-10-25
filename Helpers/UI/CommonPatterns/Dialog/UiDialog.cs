@@ -14,7 +14,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         [SerializeField] protected BaseTextUiElement messageTextElement;
         [SerializeField] protected BaseInteractableUiElement acceptButton;
         [SerializeField] protected BaseInteractableUiElement declineButton;
-        [SerializeField] protected BaseInteractableUiElement backgroundButton;
 
         public async UniTask ChangeText(string text)
         {
@@ -28,11 +27,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
             await headerTextElement.ShowText(text);
         }
 
-        public async UniTask EnableBackground(bool enable)
-        {
-            await backgroundButton.Enable(enable);
-        }
-        
         public async UniTask EnableDialog(bool enable)
         {
             await dialog.Enable(enable);
@@ -62,16 +56,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         {
             acceptButton.GetComponent<Text>().text = text;
         }
-        
-        public void AddBackgroundAction(Action action)
-        {
-            backgroundButton.OnClick += action.Invoke;
-        }
-
-        public void RemoveBackgroundAction(Action action)
-        {
-            backgroundButton.OnClick -= action.Invoke;
-        }
 
         public void AddAcceptAction(Action action)
         {
@@ -97,7 +81,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         {
             declineButton.ClearOnClickEvents();
             acceptButton.ClearOnClickEvents();
-            backgroundButton.ClearOnClickEvents();
         }
         
         public UiDialog Instantiate(Transform parent = null)
