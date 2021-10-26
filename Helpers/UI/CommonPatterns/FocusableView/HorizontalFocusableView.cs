@@ -10,6 +10,7 @@ using UnityEngine.EventSystems;
 using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.UI.AnimatedElements;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
 {
@@ -61,7 +62,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
         
         private void OnEnable()
         {
-            ElementsAnimation[FocusedIndex].StartAnimation();
+            ElementsAnimation[FocusedIndex].StartAnimation().Forget();
         }
 
         #region Swipe
@@ -167,7 +168,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             FocusedElement.Focused = true;
             FocusedIndex = focusIndex;
             
-            ElementsAnimation[focusIndex].StartAnimation();
+            ElementsAnimation[focusIndex].StartAnimation().Forget();
             OnFocusChanged?.Invoke(focusIndex);
         }
 
@@ -230,6 +231,12 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             InitSwipe();
         }
 
+        private void ProcessNavigationClick(bool right)
+        {
+            if(_currentSwipeRange > 10) return;
+            Focus(right).Forget();
+        }
+        
         public async UniTask Focus(int childIndex)
         {
             if (childIndex < 0)
@@ -243,7 +250,10 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
                 childIndex = ElementsCount - 1;
             }
             
-            ElementsAnimation[FocusedIndex].StopAnimation();
+            FocusProcessCancellationTokenSource?.Cancel();
+            FocusProcessCancellationTokenSource = new CancellationTokenSource();
+            
+            ElementsAnimation[FocusedIndex].StopAnimation().Forget();
             
             int offset = Math.Abs(FocusedIndex - childIndex);
             int direction = FocusedIndex - childIndex;
@@ -270,20 +280,21 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
 
         private async UniTask Focus()
         {
+            FocusProcessCancellationTokenSource?.Cancel();
+            FocusProcessCancellationTokenSource = new CancellationTokenSource();
+            
             await content.DOLocalMove(SavedPosition, focusSpeed)
                 .WithCancellation(FocusProcessCancellationTokenSource.Token);
         }
 
-        private void ProcessNavigationClick(bool right)
-        {
-            if(_currentSwipeRange > 10) return;
-            Focus(right).Forget();
-        }
-        
         public async UniTask Focus(bool right)
         {
             // right
-            ElementsAnimation[FocusedIndex].StopAnimation();
+            ElementsAnimation[FocusedIndex].StopAnimation().Forget();
+            
+            FocusProcessCancellationTokenSource?.Cancel();
+            FocusProcessCancellationTokenSource = new CancellationTokenSource();
+            
             if (right)
             {
                 if (FocusedIndex < ElementsCount - 1)

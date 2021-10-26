@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.AnimatedElements
 {

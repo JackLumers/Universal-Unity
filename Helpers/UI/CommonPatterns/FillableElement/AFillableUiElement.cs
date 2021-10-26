@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
 {

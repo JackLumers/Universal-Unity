@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Coroutines;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
 {

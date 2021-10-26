@@ -75,6 +75,9 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
                 submitText.text = text;
             }
 
+            _stateChangeCancellationTokenSource?.Dispose();
+            _stateChangeCancellationTokenSource = new CancellationTokenSource();
+            
             switch (state)
             {
                 case ButtonState.Disabled:

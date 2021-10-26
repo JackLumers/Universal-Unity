@@ -4,13 +4,11 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
-using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
-namespace UniversalUnity.Helpers.UI.BaseUiElements
+namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
 {
     /// <summary>
     /// Base class for all UI elements.
@@ -26,11 +24,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         
         private CancellationTokenSource _enableCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _disableCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _movingCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _alphaChangeCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _rotationCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _scalingCancellationTokenSource = new CancellationTokenSource();
-        
+
         protected bool IsInitialized { get; private set; }
 
         public bool IsEnabled { get; protected set; }
@@ -224,11 +218,11 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             gameObject.SetActive(true);
             if (forceEnableInput) InteractionBlock("Disabled", false, true);
             IsEnabled = true;
-            
-            var task = CanvasGroup
+
+            await CanvasGroup
                 .DOFade(1, EnableAnimationTime)
-                .WithCancellation(_enableCancellationTokenSource.Token);
-            await task;
+                .WithCancellation(_enableCancellationTokenSource.Token)
+                .SuppressCancellationThrow();
 
             if (!_enableCancellationTokenSource.IsCancellationRequested)
             {
@@ -255,10 +249,11 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             _enableCancellationTokenSource.Cancel();
             _disableCancellationTokenSource.Cancel();
             _disableCancellationTokenSource = new CancellationTokenSource();
-            var task = CanvasGroup
+            
+            await CanvasGroup
                 .DOFade(0, EnableAnimationTime)
-                .WithCancellation(_disableCancellationTokenSource.Token);
-            await task;
+                .WithCancellation(_disableCancellationTokenSource.Token)
+                .SuppressCancellationThrow();
             
             if (!_disableCancellationTokenSource.IsCancellationRequested)
             {
@@ -299,7 +294,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         
         protected virtual void OnEnableAnimationComplete()
         {
-            LogHelper.LogInfo("Enabled!", nameof(OnDisableAnimationComplete));
+            LogHelper.LogInfo("Enabled!", nameof(OnEnableAnimationComplete));
             InteractionBlock("Disabled", false, true);
             OnEnabled?.Invoke();
         }
@@ -312,49 +307,6 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             OnDisabled?.Invoke();
         }
 
-        public async UniTask Move(Vector3 targetLocalPosition, float timeOrSpeed, bool fixedTime, [CanBeNull] AnimationCurve curve)
-        {
-            _movingCancellationTokenSource.Cancel();
-            _movingCancellationTokenSource = new CancellationTokenSource();
-            await CurveAnimationHelper.MoveAnchored((RectTransform) transform, targetLocalPosition,
-                speedOrTime: timeOrSpeed,
-                fixedTime: fixedTime, curve: curve, cancellationToken: _movingCancellationTokenSource.Token);
-        }
-
-        public async UniTask Rotate(Quaternion targetLocalRotation, float timeOrSpeed, bool fixedTime)
-        {
-            _rotationCancellationTokenSource.Cancel();
-            _rotationCancellationTokenSource = new CancellationTokenSource();
-
-            await CurveAnimationHelper.Rotate(transform, targetLocalRotation, speedOrTime: timeOrSpeed,
-                fixedTime: fixedTime, cancellationToken: _rotationCancellationTokenSource.Token);
-        }
-
-        public async UniTask Scale(Vector3 targetLocalScale, float timeOrSpeed, bool fixedTime)
-        {
-            _scalingCancellationTokenSource.Cancel();
-            _scalingCancellationTokenSource = new CancellationTokenSource();
-            
-            await CurveAnimationHelper.Scale(transform, targetLocalScale, speedOrTime: timeOrSpeed,
-                fixedTime: fixedTime, cancellationToken: _scalingCancellationTokenSource.Token);
-        }
-
-        public async UniTask ChangeAlpha(float targetAlpha, float timeInSeconds)
-        {
-            _alphaChangeCancellationTokenSource.Cancel();
-            _alphaChangeCancellationTokenSource = new CancellationTokenSource();
-            
-            await CurveAnimationHelper.LerpFloatByCurve
-            (
-                result => CanvasGroup.alpha = result,
-                CanvasGroup.alpha,
-                targetAlpha,
-                timeOrSpeed: timeInSeconds,
-                fixedTime: true,
-                cancellationToken: _alphaChangeCancellationTokenSource.Token
-            );
-        }
-        
         public void SetAlphaImmediately(float targetAlpha)
         {
             if (!IsInitialized) InitComponents();

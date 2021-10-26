@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
-using UniversalUnity.Helpers.Coroutines;
-using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
 {
@@ -69,48 +67,42 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
         {
             float timeInSeconds = Math.Abs(amount - FilledAmount) / amountPerSecond;
 
-            _fillCancellationTokenSource.Cancel();
+            _fillCancellationTokenSource?.Cancel();
+            _fillCancellationTokenSource?.Dispose();
             _fillCancellationTokenSource = new CancellationTokenSource();
             
             switch (fillType)
             {
                 case FillType.LeftToRight:
-                    await CurveAnimationHelper.MoveAnchored
-                    (
-                        FillLineTransform,
-                        new Vector3(-ContainerWidth + StepLength * amount, 0),
-                        speedOrTime: timeInSeconds, cancellationToken: _fillCancellationTokenSource.Token
-                    );
+                    await FillLineTransform.DOAnchorPos(
+                            new Vector3(-ContainerWidth + StepLength * amount, 0),
+                            timeInSeconds)
+                        .WithCancellation(_fillCancellationTokenSource.Token)
+                        .SuppressCancellationThrow();
                     break;
                 
                 case FillType.RightToLeft:
-                    await CurveAnimationHelper.MoveAnchored
-                    (
-                        FillLineTransform,
-                        new Vector3(ContainerWidth - StepLength * amount, 0),
-                        speedOrTime: timeInSeconds,
-                        cancellationToken: _fillCancellationTokenSource.Token
-                    );
+                    await FillLineTransform.DOAnchorPos(
+                            new Vector3(ContainerWidth - StepLength * amount, 0), 
+                            timeInSeconds)
+                        .WithCancellation(_fillCancellationTokenSource.Token)
+                        .SuppressCancellationThrow();
                     break;
 
                 case FillType.DownToUp:
-                    await CurveAnimationHelper.MoveAnchored
-                    (
-                        FillLineTransform,
-                        new Vector3(0, -ContainerHeight + StepLength * amount),
-                        speedOrTime: timeInSeconds,
-                        cancellationToken: _fillCancellationTokenSource.Token
-                    );
+                    await FillLineTransform.DOAnchorPos(
+                            new Vector3(0, -ContainerHeight + StepLength * amount), 
+                            timeInSeconds)
+                        .WithCancellation(_fillCancellationTokenSource.Token)
+                        .SuppressCancellationThrow();
                     break;
 
                 case FillType.UpToDown:
-                    await CurveAnimationHelper.MoveAnchored
-                    (
-                        FillLineTransform,
-                        new Vector3(0, ContainerHeight + StepLength * amount),
-                        speedOrTime: timeInSeconds,
-                        cancellationToken: _fillCancellationTokenSource.Token
-                    );
+                    await FillLineTransform.DOAnchorPos(
+                            new Vector3(0, ContainerHeight + StepLength * amount), 
+                            timeInSeconds)
+                        .WithCancellation(_fillCancellationTokenSource.Token)
+                        .SuppressCancellationThrow();
                     break;
                 
                 default:

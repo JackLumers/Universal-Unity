@@ -2,7 +2,9 @@
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.BaseUiElements
 {
@@ -62,7 +64,14 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
 
         public void SetClosable(bool closable)
         {
-            closeButton?.Enable(closable);
+            if (ReferenceEquals(closeButton, null))
+            {
+                LogHelper.LogError("Trying to make window closable without close button", nameof(SetClosable));                
+            }
+            else
+            {
+                closeButton.EnableOrDisable(closable, true).Forget();
+            }
         }
     }
 }

@@ -45,8 +45,8 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
 
         public override async UniTask StopAnimation()
         {
-            AnimationCancellationTokenSource?.Dispose();
-            AnimationCancellationTokenSource = new CancellationTokenSource();
+            AnimationCancellationTokenSource?.Cancel();
+            AnimationCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
 
             await _rectTransform.DOAnchorPos(_startPosition, floatingOnePeriodTime / 2f)
                 .WithCancellation(AnimationCancellationTokenSource.Token);
@@ -54,18 +54,20 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
 
         public override async UniTaskVoid StartAnimation()
         {
-            AnimationCancellationTokenSource?.Dispose();
-            AnimationCancellationTokenSource = new CancellationTokenSource();
+            AnimationCancellationTokenSource?.Cancel();
+            AnimationCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
 
             await _rectTransform.DOAnchorPos(_upPosition, floatingOnePeriodTime / 2f)
                 .WithCancellation(AnimationCancellationTokenSource.Token);
+
             await _rectTransform.DOAnchorPos(_downPosition, floatingOnePeriodTime)
                 .WithCancellation(AnimationCancellationTokenSource.Token);
-            
-            while (gameObject.activeInHierarchy)
+
+            while (gameObject.activeInHierarchy && !AnimationCancellationTokenSource.IsCancellationRequested)
             {
                 await _rectTransform.DOAnchorPos(_upPosition, floatingOnePeriodTime)
                     .WithCancellation(AnimationCancellationTokenSource.Token);
+
                 await _rectTransform.DOAnchorPos(_downPosition, floatingOnePeriodTime)
                     .WithCancellation(AnimationCancellationTokenSource.Token);
             }
@@ -73,7 +75,7 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
 
         public override void ResetToInitialState()
         {
-            AnimationCancellationTokenSource?.Dispose();
+            AnimationCancellationTokenSource?.Cancel();
             _rectTransform.anchoredPosition = _startPosition;
         }
     }

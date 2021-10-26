@@ -2,12 +2,13 @@
 using System.Threading;
 using Common.UI.Swipe;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns
 {
@@ -295,16 +296,16 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
 
         protected virtual async UniTask OpenAnimation()
         {
-            await CurveAnimationHelper.MoveAnchored(RectTransform, openLocalPosition,
-                speedOrTime: EnableAnimationTime,
-                cancellationToken: _openCancellationTokenSource.Token);
+            await RectTransform.DOAnchorPos(openLocalPosition, EnableAnimationTime)
+                .WithCancellation(_openCancellationTokenSource.Token)
+                .SuppressCancellationThrow();
         }
         
         protected virtual async UniTask CloseAnimation()
         {
-            await CurveAnimationHelper.MoveAnchored(RectTransform, closeLocalPosition,
-                speedOrTime: EnableAnimationTime,
-                cancellationToken: _closeCancellationTokenSource.Token);
+            await RectTransform.DOAnchorPos(closeLocalPosition, EnableAnimationTime)
+                .WithCancellation(_openCancellationTokenSource.Token)
+                .SuppressCancellationThrow();
         }
     }
 }

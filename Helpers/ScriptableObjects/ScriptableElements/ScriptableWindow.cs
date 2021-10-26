@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace Common.Helpers.ScriptableObjects.ScriptableElements
 {

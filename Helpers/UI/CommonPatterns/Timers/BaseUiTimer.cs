@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
-using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 {
@@ -36,7 +36,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
             Enable().Forget();
             
             _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = new CancellationTokenSource();
             
             if (durationInMillis < 0)
@@ -52,13 +51,14 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
             _timer.AutoReset = false;
             _timer.Elapsed += (sender, args) => HandleTimer(onDone);
 
-            await UiHandleTimer(durationInMillis).AttachExternalCancellation(_cancellationTokenSource.Token);
+            await UiHandleTimer(durationInMillis)
+                .AttachExternalCancellation(_cancellationTokenSource.Token)
+                .SuppressCancellationThrow();
         }
         
         public virtual void StopTimer()
         {
             _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource?.Dispose();
             _timer?.Dispose();
         }
         
