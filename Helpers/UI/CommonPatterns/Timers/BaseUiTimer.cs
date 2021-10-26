@@ -11,7 +11,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
     public abstract class BaseUiTimer : BaseUiElement
     {
         private bool _destroyed;
-        private System.Timers.Timer _timer;
+        protected System.Timers.Timer Timer;
 
         private CancellationTokenSource _cancellationTokenSource;
         
@@ -24,6 +24,15 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
         {
             StopTimer();
             _destroyed = true;
+        }
+
+        private void OnEnable()
+        {
+            if (Timer is {Enabled: true})
+            {
+                UiHandleTimer((float) Timer.Interval, _cancellationTokenSource.Token)
+                    .SuppressCancellationThrow().Forget();
+            }
         }
 
         private void OnDisable()
@@ -45,24 +54,23 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
                 return;
             }
 
-            _timer?.Dispose();
-            _timer = new System.Timers.Timer(durationInMillis);
-            _timer.Start();
-            _timer.AutoReset = false;
-            _timer.Elapsed += (sender, args) => HandleTimer(onDone);
+            Timer?.Dispose();
+            Timer = new System.Timers.Timer(durationInMillis);
+            Timer.Start();
+            Timer.AutoReset = false;
+            Timer.Elapsed += (sender, args) => HandleTimer(onDone);
 
-            await UiHandleTimer(durationInMillis)
-                .AttachExternalCancellation(_cancellationTokenSource.Token)
+            await UiHandleTimer(durationInMillis, _cancellationTokenSource.Token)
                 .SuppressCancellationThrow();
         }
         
         public virtual void StopTimer()
         {
             _cancellationTokenSource?.Cancel();
-            _timer?.Dispose();
+            Timer?.Dispose();
         }
         
-        protected abstract UniTask UiHandleTimer(float durationInMillis);
+        protected abstract UniTask UiHandleTimer(float durationInMillis, CancellationToken cancellationToken);
 
         private void HandleTimer([CanBeNull] Action onDone)
         {
@@ -76,7 +84,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
         {
             if (Application.isPlaying)
             {
-                StartTimer(5000);
+                StartTimer(5000).Forget();
             }
         }
     }

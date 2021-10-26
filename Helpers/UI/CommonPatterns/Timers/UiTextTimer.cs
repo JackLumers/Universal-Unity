@@ -14,22 +14,17 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
         public bool animateNumberChanging = true;
         public string timeFormat = @"mm\:ss";
 
-        protected CancellationTokenSource TimerCancellationTokenSource;
-        
         protected override void InheritAwake()
         {
             timerText.Text = new TimeSpan(0).ToString(timeFormat);
         }
-
-        protected override async UniTask UiHandleTimer(float durationInMillis)
+        
+        protected override async UniTask UiHandleTimer(float durationInMillis, CancellationToken cancellationToken)
         {
             timerText.Enable().Forget();
 
-            TimerCancellationTokenSource?.Cancel();
-            TimerCancellationTokenSource = new CancellationTokenSource();
-            
             timerText.Text = TimeSpan.FromMilliseconds(durationInMillis).ToString(timeFormat);
-            await TimerProcess(durationInMillis - durationInMillis % 1000, TimerCancellationTokenSource.Token)
+            await TimerProcess(durationInMillis - durationInMillis % 1000, cancellationToken)
                 .SuppressCancellationThrow();
         }
         

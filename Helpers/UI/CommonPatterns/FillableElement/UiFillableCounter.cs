@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -23,16 +24,24 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             base.InheritInitComponents();
         }
 
-        protected override async UniTask OnFill(float amount, float amountPerSecond)
+        protected override async UniTask OnFill(float amount, float amountPerSecond, CancellationToken cancellationToken)
         {
-            float elementEnableTimeInSeconds = maxAmount / amountPerSecond;
-
             foreach (var counterElement in counterElements)
             {
-                counterElement.EnableAnimationTime = elementEnableTimeInSeconds;
+                counterElement.EnableAnimationTime = amountPerSecond;
             }
-
-            await FillProcess(amount);
+            
+            for (var i = 0; i < counterElements.Count; i++)
+            {
+                if (i < amount)
+                {
+                    await counterElements[i].Enable().AttachExternalCancellation(cancellationToken);
+                }
+                else
+                {
+                    await counterElements[i].Disable().AttachExternalCancellation(cancellationToken);
+                }
+            }
         }
 
         protected override void OnForceFill(float amount)
@@ -46,21 +55,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
                 else
                 {
                     counterElements[i].ForceDisable();
-                }
-            }
-        }
-
-        private async UniTask FillProcess(float amount)
-        {
-            for (var i = 0; i < counterElements.Count; i++)
-            {
-                if (i < amount)
-                {
-                    await counterElements[i].Enable();
-                }
-                else
-                {
-                    await counterElements[i].Disable();
                 }
             }
         }

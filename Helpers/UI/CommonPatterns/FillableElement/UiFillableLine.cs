@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using UniversalUnity.Helpers.Logs;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
 {
@@ -20,9 +21,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
         protected float ContainerWidth;
         protected float ContainerHeight;
         protected float StepLength;
-
-        private CancellationTokenSource _fillCancellationTokenSource = new CancellationTokenSource();
-
+        
         public enum FillType
         {
             LeftToRight,
@@ -63,13 +62,9 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             base.InheritInitComponents();
         }
 
-        protected override async UniTask OnFill(float amount, float amountPerSecond)
+        protected override async UniTask OnFill(float amount, float timeInSeconds, CancellationToken cancellationToken)
         {
-            float timeInSeconds = Math.Abs(amount - FilledAmount) / amountPerSecond;
-
-            _fillCancellationTokenSource?.Cancel();
-            _fillCancellationTokenSource?.Dispose();
-            _fillCancellationTokenSource = new CancellationTokenSource();
+            LogHelper.LogInfo("Fillable Line fill started!", nameof(OnFill));
             
             switch (fillType)
             {
@@ -77,37 +72,35 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
                     await FillLineTransform.DOAnchorPos(
                             new Vector3(-ContainerWidth + StepLength * amount, 0),
                             timeInSeconds)
-                        .WithCancellation(_fillCancellationTokenSource.Token)
-                        .SuppressCancellationThrow();
+                        .WithCancellation(cancellationToken);
                     break;
                 
                 case FillType.RightToLeft:
                     await FillLineTransform.DOAnchorPos(
-                            new Vector3(ContainerWidth - StepLength * amount, 0), 
+                            new Vector3(ContainerWidth - StepLength * amount, 0),
                             timeInSeconds)
-                        .WithCancellation(_fillCancellationTokenSource.Token)
-                        .SuppressCancellationThrow();
+                        .WithCancellation(cancellationToken);
                     break;
 
                 case FillType.DownToUp:
                     await FillLineTransform.DOAnchorPos(
-                            new Vector3(0, -ContainerHeight + StepLength * amount), 
+                            new Vector3(0, -ContainerHeight + StepLength * amount),
                             timeInSeconds)
-                        .WithCancellation(_fillCancellationTokenSource.Token)
-                        .SuppressCancellationThrow();
+                        .WithCancellation(cancellationToken);
                     break;
 
                 case FillType.UpToDown:
                     await FillLineTransform.DOAnchorPos(
-                            new Vector3(0, ContainerHeight + StepLength * amount), 
+                            new Vector3(0, ContainerHeight + StepLength * amount),
                             timeInSeconds)
-                        .WithCancellation(_fillCancellationTokenSource.Token)
-                        .SuppressCancellationThrow();
+                        .WithCancellation(cancellationToken);
                     break;
                 
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            
+            LogHelper.LogInfo("Fillable Line fill ended!", nameof(OnFill));
         }
 
         protected override void OnForceFill(float amount)
@@ -140,14 +133,14 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
 
         private async UniTask TestProcess()
         {
-            await Fill(100);
-            await Fill(0);
-            await Fill(10);
-            await Fill(50);
-            await Fill(60);
-            await Fill(100);
-            await Fill(70);
-            await Fill(0);
+            await Fill(100, 1);
+            await Fill(0, 1);
+            await Fill(10, 1);
+            await Fill(50, 1);
+            await Fill(60, 1);
+            await Fill(100, 1);
+            await Fill(70, 1);
+            await Fill(0, 1);
         }
     }
 }

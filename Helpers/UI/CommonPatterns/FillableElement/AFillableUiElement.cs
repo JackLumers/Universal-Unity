@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
-using UniversalUnity.Helpers.UI.BaseUiElements;
 using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
@@ -13,6 +13,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
         [SerializeField] public float maxAmount = 100;
         [SerializeField] public float initialAmount = 0;
 
+        private CancellationTokenSource _fillCancelationTokenSource;
+        
         public float FilledAmount { get; private set; }
 
         protected override void InheritInitComponents()
@@ -20,11 +22,24 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             base.InheritInitComponents();
 
             initialAmount = ClampAmount(initialAmount);
-            ForceFill(initialAmount);
+            FilledAmount = initialAmount;
         }
 
-        public async UniTask Fill(float amount, float amountPerSecond = 100f, bool fillOnEvenAmount = false)
+        private void OnEnable()
         {
+            ForceFill(FilledAmount);
+        }
+
+        private void OnDisable()
+        {
+            _fillCancelationTokenSource?.Cancel();
+        }
+
+        public async UniTask Fill(float amount, float timeInSeconds, bool fillOnEvenAmount = false)
+        {
+            _fillCancelationTokenSource?.Cancel();
+            _fillCancelationTokenSource = new CancellationTokenSource();
+            
             if(!IsInitialized) InitComponents();
             amount = ClampAmount(amount);
 
@@ -32,7 +47,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             if (fillOnEvenAmount || (Math.Abs(FilledAmount - amount) > Single.Epsilon))
             {
                 FilledAmount = amount;
-                await OnFill(amount, amountPerSecond);
+                await OnFill(amount, timeInSeconds, _fillCancelationTokenSource.Token);
             }
         }
 
@@ -44,8 +59,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             OnForceFill(amount);
             FilledAmount = amount;
         }
-
-        protected abstract UniTask OnFill(float amount, float amountPerSecond);
+        
+        protected abstract UniTask OnFill(float amount, float timeInSeconds, CancellationToken cancellationToken);
         
         protected abstract void OnForceFill(float amount);
 
