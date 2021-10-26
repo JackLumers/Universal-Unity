@@ -12,7 +12,7 @@ using CsvParser = UniversalUnity.Helpers.Parsing.UsingFileHelpers.CsvParser;
 
 namespace UniversalUnity.Helpers.Localization
 {
-    public static class LocalizationManager
+    public class LocalizationManager : ScriptableObject
     {
         /// <summary>
         ///     key - <see cref="AParsedLightweightEntity"/> id

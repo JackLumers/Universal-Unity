@@ -12,7 +12,6 @@ namespace UniversalUnity.Helpers.Extensions
         /// <exception cref="ArgumentException">In case of duplicated keys.</exception>
         /// <returns>Merged result.</returns>
         public static Dictionary<TKey, TValue> Merge<TKey, TValue>(
-            this Dictionary<TKey, TValue> dictionary,
             params Dictionary<TKey, TValue>[] dictionaries)
         {
             return dictionaries.SelectMany(dict => dict).ToDictionary(pair => pair.Key, pair => pair.Value);

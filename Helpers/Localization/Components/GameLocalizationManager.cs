@@ -16,11 +16,13 @@ namespace UniversalUnity.Helpers.Localization.Components
         /// Localization that is always in memory with commonly used entries.
         /// </summary>
         [SerializeField] private AssetReference[] alwaysLoaded;
+        
         /// <summary>
         /// Localization that is used in specific game state, and will be loaded dynamically.
         /// It can depends on scene or another 
         /// </summary>
-        [FormerlySerializedAs("sceneDependentLocalizationDictionary")] [SerializeField] [NotNull] private SceneDependentLocalization[] sceneDependentLocalizationList = null;
+        [FormerlySerializedAs("sceneDependentLocalizationDictionary")] 
+        [SerializeField] private SceneDependentLocalization[] sceneDependentLocalizationList;
 
         [Serializable]
         private class SceneDependentLocalization
@@ -29,7 +31,7 @@ namespace UniversalUnity.Helpers.Localization.Components
             [SerializeField] internal AssetReference[] localizationAssetReferences;
         }
         
-        private Dictionary<string, SceneDependentLocalization> _sceneDependentLocalizations = new Dictionary<string, SceneDependentLocalization>();
+        private readonly Dictionary<string, SceneDependentLocalization> _sceneDependentLocalizations = new Dictionary<string, SceneDependentLocalization>();
 
         protected override void InheritAwake()
         {
@@ -45,8 +47,8 @@ namespace UniversalUnity.Helpers.Localization.Components
             
             SceneLoader.OnSceneLoadingStarted += (scene, loadMode) => AddInParseByScene(scene.ToString());
             SceneManager.sceneUnloaded += (scene) => RemoveFromParseByScene(scene.name);
-            LocalizationManager.StartParse();
             LocalizationManager.OnTextLanguageChanged += (language) => LocalizationManager.StartParse();
+            LocalizationManager.StartParse();
         }
 
         [UsedImplicitly]
@@ -72,7 +74,12 @@ namespace UniversalUnity.Helpers.Localization.Components
                     LocalizationManager.RemoveFileFromParse(assetReference);
                 }
             }
-            LocalizationManager.StartParse();
+        }
+
+        protected override void InheritOnDestroy()
+        {
+            base.InheritOnDestroy();
+            LocalizationManager.ReleaseAll();
         }
     }
 }

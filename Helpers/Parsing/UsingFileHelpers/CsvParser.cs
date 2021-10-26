@@ -4,6 +4,7 @@ using System.Text;
 using FileHelpers;
 using JetBrains.Annotations;
 using UnityEngine;
+using UniversalUnity.Helpers.Logs;
 
 namespace UniversalUnity.Helpers.Parsing.UsingFileHelpers
 {
@@ -46,9 +47,7 @@ namespace UniversalUnity.Helpers.Parsing.UsingFileHelpers
             {
                 foreach (var entity in engine.ReadString(stringToRead))
                 {
-                    // LogHelper.LogHelper.Log(
-                    //     $"Adding parsed entity: {entityFactory.MakeLightweight(entity)}", 
-                    //     MethodBase.GetCurrentMethod());
+                    LogHelper.LogInfo($"Adding parsed entity: {entity.Id}", nameof(PrivateParse));
                     parsedData.Add(entity.Id, entity);
                 }
             }
@@ -104,9 +103,9 @@ namespace UniversalUnity.Helpers.Parsing.UsingFileHelpers
             {
                 foreach (var entity in engine.ReadString(stringToRead))
                 {
-                    // LogHelper.LogHelper.Log(
-                    //     $"Adding parsed lightweight entity: {entityFactory.MakeLightweight(entity)}", 
-                    //     MethodBase.GetCurrentMethod());
+                    LogHelper.LogInfo(
+                        $"Adding parsed lightweight entity: {entityFactory.MakeLightweight(entity)}", 
+                        nameof(PrivateParseLightweight));
                     parsedData.Add(entity.Id, entityFactory.MakeLightweight(entity));
                 }
             }
