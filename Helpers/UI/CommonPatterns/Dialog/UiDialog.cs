@@ -74,8 +74,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         
         public void ClearActions()
         {
-            declineButton.ClearOnClickEvents();
-            acceptButton.ClearOnClickEvents();
+            declineButton?.ClearOnClickEvents();
+            acceptButton?.ClearOnClickEvents();
         }
         
         public UiDialog Instantiate(Transform parent = null)
