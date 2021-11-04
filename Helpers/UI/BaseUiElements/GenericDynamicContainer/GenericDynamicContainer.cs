@@ -243,7 +243,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
                     if (!HasItemWithData(objectsData[i]))
                     {
                         // Do not wait
-                        AddItemProcess(objectsData[i], -1);
+                        AddItemProcess(objectsData[i], -1).Forget();
                     }
                     else
                     {
@@ -319,7 +319,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             var last = _itemsInContainer.Last().Value;
             foreach (var item in _itemsInContainer.Where(item => !ReferenceEquals(last, item.Value)))
             {
-                item.Value.Disable();
+                item.Value.Disable().Forget();
             }
 
             await last.Disable();

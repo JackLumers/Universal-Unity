@@ -34,7 +34,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         private float _rangeForSwipe;
         
         private CancellationTokenSource _openCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _closeCancellationTokenSource = new CancellationTokenSource();
         private bool _isOpened;
 
         private RectTransform _rectTransform;
@@ -75,7 +74,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         {
             ForceEnable();
             _openCancellationTokenSource.Cancel();
-            _closeCancellationTokenSource.Cancel();
             RectTransform.anchoredPosition = openLocalPosition;
             _isOpened = true;
         }
@@ -84,7 +82,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         {
             ForceEnable();
             _openCancellationTokenSource.Cancel();
-            _closeCancellationTokenSource.Cancel();
             RectTransform.anchoredPosition = closeLocalPosition;
             _isOpened = false;
         }
@@ -108,17 +105,9 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             {
                 if (canSwipe) _currentLocalPos = openLocalPosition;
                 
-                _openCancellationTokenSource.Cancel();
-                _closeCancellationTokenSource.Cancel();
-                
                 _isOpened = true;
 
-                _openCancellationTokenSource = new CancellationTokenSource();
-                await UniTask.WhenAll
-                (
-                    Enable().AttachExternalCancellation(_openCancellationTokenSource.Token),
-                    OpenAnimation()
-                );
+                await OpenAnimation();
             }
         }
 
@@ -128,17 +117,9 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             {
                 if (canSwipe) _currentLocalPos = closeLocalPosition;
                 
-                _openCancellationTokenSource.Cancel();
-                _closeCancellationTokenSource.Cancel();
-                
                 _isOpened = false;
                 
-                _closeCancellationTokenSource = new CancellationTokenSource();
-                await UniTask.WhenAll
-                (
-                    Enable().AttachExternalCancellation(_closeCancellationTokenSource.Token),
-                    CloseAnimation()
-                );
+                await CloseAnimation();
             }
         }
 
@@ -148,8 +129,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         {
             if (openPanelButton == null) return;
             
-            openPanelButton.OnPointerDownAction += StartTouch;
-            SwipingController.Instance.playerActions.UI.Click.canceled += EndTouch;
+           // openPanelButton.OnPointerDownAction += StartTouch;
+           //SwipingController.Instance.playerActions.UI.Click.canceled += EndTouch;
 
             _rangeForSwipe = swipeAxis switch
             {
@@ -287,15 +268,20 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
             };
         }
 
-        private void Update()
+        /*private void Update()
         {
             if (_isSwiped) MoveTouch();
-        }
+        }*/
 
         #endregion
 
         protected virtual async UniTask OpenAnimation()
         {
+            _openCancellationTokenSource.Cancel();
+            _openCancellationTokenSource = new CancellationTokenSource();
+
+            Enable().AttachExternalCancellation(_openCancellationTokenSource.Token);
+                
             await RectTransform.DOAnchorPos(openLocalPosition, EnableAnimationTime)
                 .WithCancellation(_openCancellationTokenSource.Token)
                 .SuppressCancellationThrow();
@@ -303,6 +289,11 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         
         protected virtual async UniTask CloseAnimation()
         {
+            _openCancellationTokenSource.Cancel();
+            _openCancellationTokenSource = new CancellationTokenSource();
+            
+            Enable().AttachExternalCancellation(_openCancellationTokenSource.Token);
+            
             await RectTransform.DOAnchorPos(closeLocalPosition, EnableAnimationTime)
                 .WithCancellation(_openCancellationTokenSource.Token)
                 .SuppressCancellationThrow();

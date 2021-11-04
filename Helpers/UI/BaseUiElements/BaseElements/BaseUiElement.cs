@@ -64,8 +64,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
                 
                 InheritInitComponents();
 
-                if (!calledByEnable && !WasEnabled && CanvasGroup.alpha > 0.99 && gameObject.activeInHierarchy) 
-                    Enable().Forget();
+                /*if (!calledByEnable && !WasEnabled && CanvasGroup.alpha > 0.99 && gameObject.activeInHierarchy) 
+                    Enable().Forget();*/
             }
             else
             {
