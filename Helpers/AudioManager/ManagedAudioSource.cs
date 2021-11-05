@@ -19,6 +19,7 @@ namespace UniversalUnity.Helpers.AudioManager
         [SerializeField] [CanBeNull] private AudioSource secondAudioSource = null;
 
         private CancellationTokenSource _decreasingVolumeCancellationTokenSource;
+        private CancellationTokenSource _increasingVolumeCancellationTokenSource;
         private AudioSource _activeSource;
 
         public AudioManager.EAudioSource SourceType => sourceType;
@@ -95,14 +96,16 @@ namespace UniversalUnity.Helpers.AudioManager
             _activeSource = increasingVolumeSource;
 
             _decreasingVolumeCancellationTokenSource?.Cancel();
+            _increasingVolumeCancellationTokenSource?.Cancel();
             _decreasingVolumeCancellationTokenSource = new CancellationTokenSource();
+            _increasingVolumeCancellationTokenSource = new CancellationTokenSource();
             
             if (decreasingVolumeSource.isPlaying)
             {
                 if (decreasingVolumeSource.clip != null && decreasingVolumeSource.clip.Equals(clip)) return;
 
                 DOTween.To(result => decreasingVolumeSource.volume = result, decreasingVolumeSource.volume, 0,
-                    changeTime)
+                        changeTime)
                     .WithCancellation(_decreasingVolumeCancellationTokenSource.Token)
                     .SuppressCancellationThrow();
             }
@@ -112,11 +115,11 @@ namespace UniversalUnity.Helpers.AudioManager
             increasingVolumeSource.clip = clip;
             increasingVolumeSource.Play();
 
-            await DOTween.To(result => decreasingVolumeSource.volume = result, 
+            await DOTween.To(result => increasingVolumeSource.volume = result, 
                     0, 
                     PlayerPrefsManager.GetSavedVolumeForSource(SourceType),
                     changeTime)
-                .WithCancellation(_decreasingVolumeCancellationTokenSource.Token)
+                .WithCancellation(_increasingVolumeCancellationTokenSource.Token)
                 .SuppressCancellationThrow();
         }
 

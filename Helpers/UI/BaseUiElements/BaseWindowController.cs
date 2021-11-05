@@ -23,12 +23,22 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         
         public bool IsOpened => uiContainer.IsEnabled;
 
+        private bool _closable = true;
+        
         protected override void InheritAwake()
         {
             base.InheritAwake();
-            if (!(closeButton is null)) closeButton.OnClick += OnCloseButtonClick;
+            if (!(closeButton is null)) closeButton.OnClick += PrivateOnCloseButtonClick;
         }
 
+        private void PrivateOnCloseButtonClick()
+        {
+            if (_closable)
+            {
+                OnCloseButtonClick();
+            }
+        }
+        
         protected virtual void OnCloseButtonClick()
         {
             Close().Forget();
@@ -64,6 +74,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
 
         public void SetClosable(bool closable)
         {
+            _closable = closable;
             if (ReferenceEquals(closeButton, null))
             {
                 LogHelper.LogError("Trying to make window closable without close button", nameof(SetClosable));                

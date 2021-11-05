@@ -5,32 +5,20 @@ using UnityEngine;
 
 namespace UniversalUnity.Helpers.UI.AnimatedElements
 {
-    [RequireComponent(typeof(RectTransform))]
-    public class FloatingAnimatedElement : BaseAnimatedElement
+    public class ScalingBubbleAnimatedElement : BaseAnimatedElement
     {
-        [Header("= FloatingAnimatedElement Fields =")] [SerializeField]
-        private float floatingOnePeriodTime = 1f; // In seconds
-
-        [SerializeField] private float floatingStrength = 5f; // how many units for up and down
-        [SerializeField] private bool playOnAwake;
         [SerializeField] private bool playOnEnable;
-
+        
         private RectTransform _rectTransform;
-        private Vector3 _startPosition;
-        private Vector3 _upPosition;
-        private Vector3 _downPosition;
+        private Vector3 _startScale;
 
         protected override void InheritAwake()
         {
             base.InheritAwake();
             _rectTransform = (RectTransform) transform;
-            _startPosition = _rectTransform.anchoredPosition;
-            _upPosition = _startPosition + Vector3.up * floatingStrength;
-            _downPosition = _startPosition + Vector3.down * floatingStrength;
-
-            if (playOnAwake) StartAnimation().Forget();
+            _startScale = _rectTransform.localScale;
         }
-
+        
         private void OnEnable()
         {
             if (playOnEnable)
@@ -38,7 +26,7 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
                 StartAnimation().Forget();
             }
         }
-
+        
         private void OnDisable()
         {
             ResetToInitialState();
@@ -49,13 +37,13 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
             AnimationCancellationTokenSource?.Cancel();
             AnimationCancellationTokenSource?.Dispose();
         }
-
+        
         public override async UniTask StopAnimation()
         {
             AnimationCancellationTokenSource?.Cancel();
             AnimationCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
-
-            await _rectTransform.DOAnchorPos(_startPosition, floatingOnePeriodTime / 2f)
+            
+            await _rectTransform.DOScale(new Vector3(_startScale.x, _startScale.y, 1f), 1f)
                 .WithCancellation(AnimationCancellationTokenSource.Token);
         }
 
@@ -64,18 +52,11 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
             AnimationCancellationTokenSource?.Cancel();
             AnimationCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
 
-            await _rectTransform.DOAnchorPos(_upPosition, floatingOnePeriodTime / 2f)
-                .WithCancellation(AnimationCancellationTokenSource.Token);
-
-            await _rectTransform.DOAnchorPos(_downPosition, floatingOnePeriodTime)
-                .WithCancellation(AnimationCancellationTokenSource.Token);
-
             while (!AnimationCancellationTokenSource.IsCancellationRequested && gameObject.activeInHierarchy)
             {
-                await _rectTransform.DOAnchorPos(_upPosition, floatingOnePeriodTime)
+                await _rectTransform.DOScale(new Vector3(_startScale.x * 1.15f, _startScale.y * 1.15f, 1f), 1f)
                     .WithCancellation(AnimationCancellationTokenSource.Token);
-
-                await _rectTransform.DOAnchorPos(_downPosition, floatingOnePeriodTime)
+                await _rectTransform.DOScale(new Vector3(_startScale.x, _startScale.y, 1f), 1f)
                     .WithCancellation(AnimationCancellationTokenSource.Token);
             }
         }
@@ -83,7 +64,7 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
         public override void ResetToInitialState()
         {
             AnimationCancellationTokenSource?.Cancel();
-            _rectTransform.anchoredPosition = _startPosition;
+            _rectTransform.localScale = _startScale;
         }
     }
 }

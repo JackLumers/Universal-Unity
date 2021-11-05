@@ -24,7 +24,7 @@ namespace UniversalUnity.Helpers.MonoBehaviourExtenders
         {
             get
             {
-                if (_transform == null) _transform = base.transform;
+                if (ReferenceEquals(_transform, null)) _transform = base.transform;
                 return _transform;
             }
         }
@@ -33,7 +33,7 @@ namespace UniversalUnity.Helpers.MonoBehaviourExtenders
         {
             get
             {
-                if (_gameObject == null) _gameObject = base.gameObject;
+                if (ReferenceEquals(_gameObject, null)) _gameObject = base.gameObject;
                 return _gameObject;
             }
         }

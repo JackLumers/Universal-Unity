@@ -44,6 +44,14 @@ namespace UniversalUnity.Helpers.SceneLoading
         public void StopTimer()
         {
             timer.StopTimer();
+            if (ui.IsEnabled)
+            {
+                timer.Disable().Forget();
+            }
+            else
+            {
+                timer.ForceDisable();
+            }
         }
         
         public async UniTask ShowText(string text)

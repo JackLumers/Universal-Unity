@@ -13,7 +13,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         [SerializeField] protected BaseTextUiElement messageTextElement;
         [SerializeField] protected BaseInteractableUiElement acceptButton;
         [SerializeField] protected BaseInteractableUiElement declineButton;
-
+        
         public async UniTask ChangeText(string text)
         {
             Enable().Forget();

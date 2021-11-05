@@ -26,6 +26,7 @@ namespace UniversalUnity.Helpers.Localization.Components
         private void SetLocalizedText()
         {
             _text = LocalizationManager.GetText(textId);
+            _textComponent.text = _text;
         }
     }
 }
