@@ -50,6 +50,11 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         {
             acceptButton.GetComponent<Text>().text = text;
         }
+        
+        public void SetDeclineButtonText(string text)
+        {
+            declineButton.GetComponent<Text>().text = text;
+        }
 
         public void AddAcceptAction(Action action)
         {
