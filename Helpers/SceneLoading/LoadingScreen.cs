@@ -2,7 +2,8 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
-using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
+using UniversalUnity.Helpers.UI.CommonPatterns.Timers;
 
 namespace UniversalUnity.Helpers.SceneLoading
 {
@@ -10,8 +11,9 @@ namespace UniversalUnity.Helpers.SceneLoading
     {
         [SerializeField] private BaseUiElement ui;
         [SerializeField] private BaseTextUiElement textElement;
-
-        private CancellationTokenSource _textChangingCancellationTokenSource = new CancellationTokenSource();
+        [SerializeField] private BaseUiTimer timer;
+        
+        private CancellationTokenSource _textChangingCancellationTokenSource;
 
         public async UniTask Enable()
         {
@@ -33,14 +35,31 @@ namespace UniversalUnity.Helpers.SceneLoading
             ui.ForceDisable();
         }
 
+        public void StartTimer(float durationInMillis)
+        {
+            ui.Enable().Forget();
+            timer.StartTimer(durationInMillis).Forget();
+        }
+        
+        public void StopTimer()
+        {
+            timer.StopTimer();
+            if (ui.IsEnabled)
+            {
+                timer.Disable().Forget();
+            }
+            else
+            {
+                timer.ForceDisable();
+            }
+        }
+        
         public async UniTask ShowText(string text)
         {
-            _textChangingCancellationTokenSource.Cancel();
+            _textChangingCancellationTokenSource?.Cancel();
             _textChangingCancellationTokenSource = new CancellationTokenSource();
-            UniTask.Run(
-                () => ui.Enable(),
-                cancellationToken: _textChangingCancellationTokenSource.Token
-            );
+            
+            ui.Enable().Forget();
             await TextChanging(text);
         }
 
@@ -49,6 +68,12 @@ namespace UniversalUnity.Helpers.SceneLoading
             if(textElement.IsEnabled) await textElement.Disable();
             textElement.Text = text;
             await textElement.Enable();
+        }
+        
+        public void SetText(string text)
+        {
+            textElement.gameObject.SetActive(true);
+            textElement.Text = text;
         }
     }
 }

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -47,6 +50,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
         
         protected override void InheritInitComponents()
         {
+            _savedScale = transform.localScale;
             _button = GetComponent<Button>();
             _button.onClick.AddListener(PrivateClick);
         }
@@ -100,16 +104,24 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             PointedDown = true;
             HoldTime = 0;
             Pointed = true;
+            
+            PressedAnimation().Forget();
+            
             CoroutineHelper.RestartCoroutine(ref _pointingCoroutine, PointingProcess(eventData), this);
         }
 
         public void OnPointerUp(PointerEventData eventData)
         {
             OnPointerUpAction?.Invoke(eventData);
-            
+
             if (Pointed)
             {
                 OnPointerUpAndPointedAction?.Invoke(eventData);
+                ClickedAnimation().Forget();
+            }
+            else
+            {
+                ReleasedAnimation().Forget();
             }
             
             PointedDown = false;
@@ -155,6 +167,42 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
                 }
                 yield return new WaitForEndOfFrame();
             }
+        }
+
+        #endregion
+        
+        #region Animation
+
+        private Vector3 _savedScale;
+        private CancellationTokenSource _scaleAnimationCancellationTokenSource;
+        
+        protected virtual async UniTaskVoid PressedAnimation()
+        {
+            _scaleAnimationCancellationTokenSource?.Cancel();
+            _scaleAnimationCancellationTokenSource = new CancellationTokenSource();
+            
+            await transform.DOScale(new Vector3(_savedScale.x * 1.1f, _savedScale.y * 1.1f, 1f), 0.25f)
+                .WithCancellation(_scaleAnimationCancellationTokenSource.Token);
+        }
+        
+        protected virtual async UniTaskVoid ReleasedAnimation()
+        {
+            _scaleAnimationCancellationTokenSource?.Cancel();
+            _scaleAnimationCancellationTokenSource = new CancellationTokenSource();
+            
+            await transform.DOScale(new Vector3(_savedScale.x, _savedScale.y, 1f), 0.25f)
+                .WithCancellation(_scaleAnimationCancellationTokenSource.Token);
+        }
+
+        protected virtual async UniTaskVoid ClickedAnimation()
+        {
+            _scaleAnimationCancellationTokenSource?.Cancel();
+            _scaleAnimationCancellationTokenSource = new CancellationTokenSource();
+            
+            await transform.DOScale(new Vector3(_savedScale.x * 1.15f, _savedScale.y * 1.15f, 1f), 0.10f)
+                .WithCancellation(_scaleAnimationCancellationTokenSource.Token);
+            await transform.DOScale(new Vector3(_savedScale.x, _savedScale.y, 1f), 0.25f)
+                .WithCancellation(_scaleAnimationCancellationTokenSource.Token);
         }
 
         #endregion

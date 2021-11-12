@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
+using Common.UI.Swipe;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEngine;
-using UniversalUnity.Helpers.Coroutines;
+using UnityEngine.EventSystems;
 using UniversalUnity.Helpers.Logs;
-using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
+using UniversalUnity.Helpers.UI.AnimatedElements;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
 {
@@ -24,22 +26,139 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
         [SerializeField] protected BaseInteractableUiElement buttonRight;
         [SerializeField] protected bool dynamicButtons = true;
 
-        protected List<RectTransform> _elementsRects = new List<RectTransform>();
-        protected float _childWidth;
-        protected float _initialPosition;
-        
-        protected CancellationTokenSource _focusCancellationTokenSource = new CancellationTokenSource();
-        protected int _focusedIndex;
-        protected Vector3 _savedPosition;
+        protected readonly List<RectTransform> ElementsRects = new List<RectTransform>();
+        protected FloatingAnimatedElement[] ElementsAnimation;
+        protected float ChildWidth;
+        protected float InitialPosition;
+
+        protected CancellationTokenSource FocusProcessCancellationTokenSource;
+        protected int FocusedIndex;
+        protected Vector3 SavedPosition;
 
         public Action<int> OnFocusChanged;
         
-        public int ElementsCount => _elementsRects.Count;
+        [Header("=Swipe Element Fields=")]
+        [SerializeField] private bool canSwipe;
+        [SerializeField] [Range(0, 1f)] private float thresholdSwipe;
+        
+        private float _rangeForSwipe;
+        
+        private bool _isSwiped;
+
+        private float _startTouchPosX;
+        private float _endTouchPosX;
+
+        private float _lastFrameTouchPosX;
+        private float _currentTouchPosX;
+
+        private float _currentSwipeRange;
+        
+        public int ElementsCount => elements.Length;
         
         /// <summary>
         /// Can be null before calling <see cref="InheritAwake"/>
         /// </summary>
         [CanBeNull] public FocusableElement FocusedElement { get; private set; }
+        
+        private void OnEnable()
+        {
+            ElementsAnimation[FocusedIndex].StartAnimation().Forget();
+        }
+
+        #region Swipe
+
+        private void InitSwipe()
+        {
+            if (!canSwipe) return;
+
+            buttonLeft.OnPointerDownAction -= StartSwipe;
+            buttonLeft.OnPointerDownAction += StartSwipe;
+
+            buttonRight.OnPointerDownAction -= StartSwipe;
+            buttonRight.OnPointerDownAction += StartSwipe;
+
+            buttonLeft.OnPointerUpAction -= EndSwipe;
+            buttonLeft.OnPointerUpAction += EndSwipe;
+
+            buttonRight.OnPointerUpAction -= EndSwipe;
+            buttonRight.OnPointerUpAction += EndSwipe;
+
+            ElementsAnimation[FocusedIndex].StopAnimation();
+            _rangeForSwipe = ChildWidth * thresholdSwipe;
+        }
+
+        private void StartSwipe(PointerEventData data)
+        {
+            _startTouchPosX = data.position.x;
+            _currentTouchPosX = SavedPosition.x;
+            _lastFrameTouchPosX = data.position.x;
+            _currentSwipeRange = 0;
+            
+            _isSwiped = true;
+
+            ElementsAnimation[FocusedIndex].enabled = false;
+        }
+
+        private void EndSwipe(PointerEventData data)
+        {
+            if (!_isSwiped) return;
+            
+            _endTouchPosX = data.position.x;
+            _currentSwipeRange = 0;
+            _isSwiped = false;
+            
+            ControlSwipe();
+        }
+
+        private void ControlSwipe()
+        {
+            float currentRange = _startTouchPosX - _endTouchPosX;
+            if (currentRange == 0) return;
+
+            if (Math.Abs(currentRange) > _rangeForSwipe)
+            {
+                int index = 0;
+                float minDistance = Math.Abs(-_currentTouchPosX - ElementsRects[index].localPosition.x);
+                
+                for (int i = 1; i < elements.Length; i++)
+                {
+                    if (i == FocusedIndex) continue;
+                    if (minDistance < Math.Abs(-_currentTouchPosX - ElementsRects[i].localPosition.x) ||
+                        !CanFocus(currentRange > 0)) continue;
+
+                    index = i;
+                    minDistance = -_currentTouchPosX - ElementsRects[i].localPosition.x;
+                }
+
+                Focus(index).Forget();
+                _currentTouchPosX = SavedPosition.x;
+            }
+            else
+            {
+                Focus().Forget();
+                _currentTouchPosX = SavedPosition.x;
+            }
+        }
+
+        private void MoveSwipe()
+        {
+            _currentSwipeRange = 
+                SwipingController.Instance.playerActions.UI.ClickPostion.ReadValue<Vector2>().x - _lastFrameTouchPosX;
+
+            _currentTouchPosX += _currentSwipeRange;
+            
+            content.localPosition = 
+                Vector2.Lerp(content.localPosition, new Vector2(_currentTouchPosX, 0), focusSpeed);
+
+            _lastFrameTouchPosX = SwipingController.Instance.playerActions.UI.ClickPostion.ReadValue<Vector2>().x;
+        }
+
+        private void Update()
+        {
+            if (_isSwiped) MoveSwipe();
+        }
+
+        #endregion
 
         private void UpdateFocus(int focusIndex)
         {
@@ -47,7 +166,9 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             FocusedElement = elements[focusIndex];
             // ReSharper disable once PossibleNullReferenceException
             FocusedElement.Focused = true;
-
+            FocusedIndex = focusIndex;
+            
+            ElementsAnimation[focusIndex].StartAnimation().Forget();
             OnFocusChanged?.Invoke(focusIndex);
         }
 
@@ -62,12 +183,14 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
                     nameof(InheritAwake));
                 return;
             }
-            
+
             /* Getting child rects and making focusable elements*/
-            foreach (var element in elements)
+            ElementsAnimation = new FloatingAnimatedElement[elements.Length];
+            for (int i = 0; i < elements.Length; i++)
             {
-                _elementsRects.Add(element.GetComponent<RectTransform>());
-                element.Focused = false;
+                ElementsRects.Add(elements[i].GetComponent<RectTransform>());
+                ElementsAnimation[i] = elements[i].GetComponent<FloatingAnimatedElement>();
+                elements[i].Focused = false;
             }
             
             /* Setting initial position */
@@ -76,12 +199,12 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
                 initialFocusIndex = ElementsCount-1;
             }
 
-            _childWidth = _elementsRects[1].rect.width;
+            ChildWidth = ElementsRects[1].rect.width;
             
             // even elements count
             if (ElementsCount % 2 == 0)
             {
-                var stepLength = _childWidth / 2;
+                var stepLength = ChildWidth / 2;
                 // right
                 if (initialFocusIndex > (float) ElementsCount / 2)
                 {
@@ -94,19 +217,26 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
                 }
             }
 
-            _initialPosition = content.localPosition.x;
-            _savedPosition = new Vector3(_initialPosition, 0);
-            _focusedIndex = initialFocusIndex;
+            InitialPosition = content.localPosition.x;
+            SavedPosition = new Vector3(InitialPosition, 0);
+            FocusedIndex = initialFocusIndex;
 
-            UpdateFocus(_focusedIndex);
+            UpdateFocus(FocusedIndex);
 
             /* Listeners */
-            buttonLeft.OnClick += () => {Focus(false);};
-            buttonRight.OnClick += () => {Focus(true);};
+            buttonLeft.OnClick += () => {ProcessNavigationClick(false);};
+            buttonRight.OnClick += () => {ProcessNavigationClick(true);};
             
             UpdateButtonsState();
+            InitSwipe();
         }
 
+        private void ProcessNavigationClick(bool right)
+        {
+            if(_currentSwipeRange > 10) return;
+            Focus(right).Forget();
+        }
+        
         public async UniTask Focus(int childIndex)
         {
             if (childIndex < 0)
@@ -120,63 +250,79 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
                 childIndex = ElementsCount - 1;
             }
             
-            _focusedIndex = childIndex;
-            UpdateFocus(_focusedIndex);
+            FocusProcessCancellationTokenSource?.Cancel();
+            FocusProcessCancellationTokenSource = new CancellationTokenSource();
+            
+            ElementsAnimation[FocusedIndex].StopAnimation().Forget();
+            
+            int offset = Math.Abs(FocusedIndex - childIndex);
+            int direction = FocusedIndex - childIndex;
+            FocusedIndex = childIndex;
+            
+            UpdateFocus(FocusedIndex);
             
             UpdateButtonsState();
 
             // right
-            if (childIndex > (float) ElementsCount / 2)
+            if (direction < 0)
             {
-                _savedPosition = new Vector3(_initialPosition + childIndex * _childWidth, 0);
-                _focusCancellationTokenSource.Cancel();
-                _focusCancellationTokenSource = new CancellationTokenSource();
-                await CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed, 
-                    cancellationToken: _focusCancellationTokenSource.Token);
+                SavedPosition = new Vector3(SavedPosition.x - ChildWidth * offset, 0);
+                await content.DOLocalMove(SavedPosition, focusSpeed)
+                    .WithCancellation(FocusProcessCancellationTokenSource.Token);
+                return;
             }
+            
             // left
-            else
-            {
-                _savedPosition = new Vector3(-_initialPosition + childIndex * _childWidth, 0);
-                _focusCancellationTokenSource.Cancel();
-                _focusCancellationTokenSource = new CancellationTokenSource();
-                await CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed, 
-                    cancellationToken: _focusCancellationTokenSource.Token);
-            }
+            SavedPosition = new Vector3(SavedPosition.x + ChildWidth * offset, 0);
+            await content.DOLocalMove(SavedPosition, focusSpeed)
+                .WithCancellation(FocusProcessCancellationTokenSource.Token);
+        }
+
+        private async UniTask Focus()
+        {
+            FocusProcessCancellationTokenSource?.Cancel();
+            FocusProcessCancellationTokenSource = new CancellationTokenSource();
+            
+            await content.DOLocalMove(SavedPosition, focusSpeed)
+                .WithCancellation(FocusProcessCancellationTokenSource.Token);
         }
 
         public async UniTask Focus(bool right)
         {
             // right
+            ElementsAnimation[FocusedIndex].StopAnimation().Forget();
+            
+            FocusProcessCancellationTokenSource?.Cancel();
+            FocusProcessCancellationTokenSource = new CancellationTokenSource();
+            
             if (right)
             {
-                if (_focusedIndex < ElementsCount - 1)
+                if (FocusedIndex < ElementsCount - 1)
                 {
-                    _focusedIndex++;
-                    UpdateFocus(_focusedIndex);
+                    
+                    FocusedIndex++;
+                    UpdateFocus(FocusedIndex);
                     UpdateButtonsState();
                     
-                    _savedPosition = new Vector3(_savedPosition.x - _childWidth, 0);
-                    _focusCancellationTokenSource.Cancel();
-                    _focusCancellationTokenSource = new CancellationTokenSource();
-                    await CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed, 
-                        cancellationToken: _focusCancellationTokenSource.Token);
+                    SavedPosition = new Vector3(SavedPosition.x - ChildWidth, 0);
+                    await content.DOLocalMove(SavedPosition, focusSpeed)
+                        .WithCancellation(FocusProcessCancellationTokenSource.Token);
+                    return;
                 }
             }
             // left
             else
             {
-                if (_focusedIndex > 0)
+                if (FocusedIndex > 0)
                 {
-                    _focusedIndex--;
-                    UpdateFocus(_focusedIndex);
+                    FocusedIndex--;
+                    UpdateFocus(FocusedIndex);
                     UpdateButtonsState();
                     
-                    _savedPosition = new Vector3(_savedPosition.x + _childWidth, 0);
-                    _focusCancellationTokenSource.Cancel();
-                    _focusCancellationTokenSource = new CancellationTokenSource();
-                    await CurveAnimationHelper.Move(content, _savedPosition, speedOrTime: focusSpeed, 
-                        cancellationToken: _focusCancellationTokenSource.Token);
+                    SavedPosition = new Vector3(SavedPosition.x + ChildWidth, 0);
+                    await content.DOLocalMove(SavedPosition, focusSpeed)
+                        .WithCancellation(FocusProcessCancellationTokenSource.Token);
+                    return;
                 }
             }
             
@@ -187,11 +333,11 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
         {
             if (right)
             {
-                if (_focusedIndex < ElementsCount - 1) return true;
+                if (FocusedIndex < ElementsCount - 1) return true;
             }
             else
             {
-                if (_focusedIndex > 0) return true;
+                if (FocusedIndex > 0) return true;
             }
 
             return false;
@@ -203,20 +349,20 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             {
                 if (!CanFocus(true))
                 {
-                    buttonRight.Disable();
+                    buttonRight.Disable().Forget();
                 }
                 else
                 {
-                    buttonRight.Enable();
+                    buttonRight.Enable().Forget();
                 }
 
                 if (!CanFocus(false))
                 {
-                    buttonLeft.Disable();
+                    buttonLeft.Disable().Forget();
                 }
                 else
                 {
-                    buttonLeft.Enable();
+                    buttonLeft.Enable().Forget();
                 } 
             }
         }

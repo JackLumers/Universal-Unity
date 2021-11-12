@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UniversalUnity.Helpers.UI.BaseUiElements
+namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
 {
     public class BaseTextUiElement : BaseUiElement
     {
@@ -25,21 +25,15 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
 
         public async UniTask ShowText(string text)
         {
-            gameObject.SetActive(true);
-            await TextChangingProcess(text);
+            await Disable();
+            Text = text;
+            await Enable();
         }
         
         public void ForceShowText(string text)
         {
             ForceEnable();
             textComponent.text = text;
-        }
-
-        private async UniTask TextChangingProcess(string text)
-        {
-            await Disable();
-            Text = text;
-            await Enable();
         }
     }
 }

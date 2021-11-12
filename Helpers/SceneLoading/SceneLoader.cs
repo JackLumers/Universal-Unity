@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
 using Cysharp.Threading.Tasks;
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UniversalUnity.Helpers._ProjectDependent;
-using UniversalUnity.Helpers.Coroutines;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
 
 namespace UniversalUnity.Helpers.SceneLoading
@@ -17,34 +15,25 @@ namespace UniversalUnity.Helpers.SceneLoading
         public static Action<ESceneName, LoadSceneMode> OnSceneLoadingStarted;
         public static Action<ESceneName, LoadSceneMode> OnSceneLoadingEnded;
 
-        public static bool IsLoadingInProcess { get; private set; } = false;
-
-        private Coroutine _loadingCoroutine;
+        private CancellationTokenSource _loadingCancellationTokenSource;
 
         protected override void InheritAwake()
         {
             OnSceneLoadingEnded += (scene, mode) =>
             {
-                loadingScreen.Disable();
-                IsLoadingInProcess = false;
+                loadingScreen.Disable().Forget();
             };
         }
 
-        public async UniTask LoadSceneAsync(ESceneName sceneName, [CanBeNull] Action onLoaded = null, LoadSceneMode loadSceneMode = LoadSceneMode.Single)
-        {
-            await loadingScreen.Enable();
-            StartSceneLoading(sceneName, loadSceneMode, onLoaded);
-        }
-
-        private void StartSceneLoading(ESceneName sceneName, LoadSceneMode loadSceneMode, [CanBeNull] Action onLoaded)
+        public async UniTask LoadSceneAsync(ESceneName sceneName, LoadSceneMode loadSceneMode = LoadSceneMode.Single)
         {
             try
             {
-                IsLoadingInProcess = true;
-                CoroutineHelper.RestartCoroutine(
-                    ref _loadingCoroutine,
-                    LoadingProcess(sceneName, loadSceneMode, onLoaded), 
-                    this);
+                _loadingCancellationTokenSource?.Dispose();
+                _loadingCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+                
+                await loadingScreen.Enable();
+                await LoadProcess(sceneName, loadSceneMode);
             }
             catch (Exception e)
             {
@@ -53,11 +42,11 @@ namespace UniversalUnity.Helpers.SceneLoading
             }
         }
 
-        private IEnumerator LoadingProcess(ESceneName sceneName, LoadSceneMode loadSceneMode, [CanBeNull] Action onLoaded)
+        private async UniTask LoadProcess(ESceneName sceneName, LoadSceneMode loadSceneMode)
         {
             OnSceneLoadingStarted?.Invoke(sceneName, loadSceneMode);
-            yield return SceneManager.LoadSceneAsync(sceneName.ToString(), loadSceneMode);
-            onLoaded?.Invoke();
+            await SceneManager.LoadSceneAsync(sceneName.ToString(), loadSceneMode)
+                .WithCancellation(_loadingCancellationTokenSource.Token);
             OnSceneLoadingEnded?.Invoke(sceneName, loadSceneMode);
         }
     }

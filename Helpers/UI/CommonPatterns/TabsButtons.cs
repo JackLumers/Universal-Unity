@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using UniversalUnity.Helpers.Coroutines;
-using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns
 {
@@ -34,7 +35,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         public int CurrentTab { get; private set; } = 0;
         public bool ChangingTabLocked { get; private set; } = false;
 
-        private Coroutine _tabChangingCoroutine;
+        private CancellationTokenSource _tabChangingCancellationTokenSource;
 
         protected override void InheritInitComponents()
         {
@@ -47,7 +48,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
                     if (!ChangingTabLocked && CurrentTab != i1)
                     {
                         tab.onClick.Invoke();
-                        ChangeTab(i1);
+                        ChangeTab(i1).Forget();
                     }
                 };
                 i++;
@@ -66,27 +67,29 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
         public void DeselectAny()
         {
             CurrentTab = -1;
-            tabSlider.Disable();
+            tabSlider.Disable().Forget();
         }
         
-        public void ChangeTab(int index)
+        public async UniTask ChangeTab(int index)
         {
             if (index < 0 || index > TabsCount)
             {
                 throw new ArgumentOutOfRangeException(nameof(index), "Index is less than 0 or greater than tabs count!");
             }
-
-            if (CurrentTab == -1) tabSlider.Enable();
+            
+            _tabChangingCancellationTokenSource?.Cancel();
+            _tabChangingCancellationTokenSource?.Dispose();
+            _tabChangingCancellationTokenSource = new CancellationTokenSource();
+            
+            if (CurrentTab == -1) tabSlider.Enable().Forget();
             
             CurrentTab = index;
             Vector3 target = tabs[index].button.transform.localPosition;
-            CoroutineHelper.RestartCoroutine(ref _tabChangingCoroutine, MovingProcess(target), this);
-        }
-        
-        private IEnumerator MovingProcess(Vector3 target)
-        {
+            
             ChangingTabLocked = true;
-            yield return CurveAnimationHelper.Move(tabSlider.transform, target, speedOrTime: 3.5f, isLocalPosition: true);
+            await tabSlider.transform.DOLocalMove(target, 3.5f)
+                .WithCancellation(_tabChangingCancellationTokenSource.Token)
+                .SuppressCancellationThrow();
             ChangingTabLocked = false;
         }
     }

@@ -21,14 +21,26 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
             base.InheritInitComponents();
         }
 
-        protected override async UniTask OnFill(float amount, float amountPerSecond)
+        protected override async UniTask OnFill(float amount, float timeInSeconds, CancellationToken cancellationToken)
         {
             _fillCancellationTokenSource.Cancel();
             _fillCancellationTokenSource = new CancellationTokenSource();
-            
-            float elementEnableTimeInSeconds = amountPerSecond / maxAmount;
 
-            await FillProcess(amount, elementEnableTimeInSeconds);
+            for (int i = 0; i < counterElements.Count; i++)
+            {
+                var counterElement = counterElements[i];
+                // if must be filled
+                if (i < amount)
+                {
+                    await counterElement.Fill(counterElement.maxAmount, timeInSeconds)
+                        .AttachExternalCancellation(cancellationToken);
+                }
+                // if must be empty
+                else
+                {
+                    await counterElement.Fill(0, timeInSeconds).AttachExternalCancellation(cancellationToken);;
+                }
+            }
         }
 
         protected override void OnForceFill(float amount)
@@ -44,25 +56,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FillableElement
                 else
                 {
                     counterElements[i].ForceFill(0);
-                }
-            }
-        }
-
-        private async UniTask FillProcess(float amount, float elementFillTimeInSeconds)
-        {
-            for (int i = 0; i < counterElements.Count; i++)
-            {
-                var counterElement = counterElements[i];
-                // if must be filled
-                if (i < amount)
-                {
-                    await counterElement.Fill(counterElement.maxAmount, 
-                        elementFillTimeInSeconds * counterElement.maxAmount);
-                }
-                // if must be empty
-                else
-                {
-                    await counterElement.Fill(0, elementFillTimeInSeconds * counterElement.maxAmount);
                 }
             }
         }

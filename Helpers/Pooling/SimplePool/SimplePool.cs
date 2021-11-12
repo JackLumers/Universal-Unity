@@ -84,7 +84,7 @@ namespace UniversalUnity.Helpers.Pooling.SimplePool
                 }
 
                 T toReturn = (T) monoBehaviours.Dequeue();
-                toReturn.transform.SetParent(parent);
+                toReturn.transform.SetParent(parent, false);
                 return toReturn;
             }
 
@@ -104,7 +104,7 @@ namespace UniversalUnity.Helpers.Pooling.SimplePool
             if (ObjectsDictionary.ContainsKey(poolName))
             {
                 ObjectsDictionary[poolName].Enqueue(obj);
-                obj.transform.SetParent(PoolDictionary[poolName].transform);
+                obj.transform.SetParent(PoolDictionary[poolName].transform, false);
             }
             else
             {

@@ -1,9 +1,9 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
-using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 using UniversalUnity.Helpers.Utils;
 
 namespace UniversalUnity.Helpers.AudioManager
@@ -18,8 +18,8 @@ namespace UniversalUnity.Helpers.AudioManager
         /// </summary>
         [SerializeField] [CanBeNull] private AudioSource secondAudioSource = null;
 
-        private CancellationTokenSource _decreasingVolumeCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _stopCancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _decreasingVolumeCancellationTokenSource;
+        private CancellationTokenSource _increasingVolumeCancellationTokenSource;
         private AudioSource _activeSource;
 
         public AudioManager.EAudioSource SourceType => sourceType;
@@ -95,23 +95,19 @@ namespace UniversalUnity.Helpers.AudioManager
 
             _activeSource = increasingVolumeSource;
 
+            _decreasingVolumeCancellationTokenSource?.Cancel();
+            _increasingVolumeCancellationTokenSource?.Cancel();
+            _decreasingVolumeCancellationTokenSource = new CancellationTokenSource();
+            _increasingVolumeCancellationTokenSource = new CancellationTokenSource();
+            
             if (decreasingVolumeSource.isPlaying)
             {
                 if (decreasingVolumeSource.clip != null && decreasingVolumeSource.clip.Equals(clip)) return;
-                _decreasingVolumeCancellationTokenSource.Cancel();
-                _decreasingVolumeCancellationTokenSource = new CancellationTokenSource();
-                UniTask.Run(() =>
-                    {
-                        return CurveAnimationHelper.LerpFloatByCurve
-                        (
-                            result => decreasingVolumeSource.volume = result,
-                            decreasingVolumeSource.volume,
-                            0,
-                            timeOrSpeed: changeTime,
-                            onDone: () => { decreasingVolumeSource.Stop(); }
-                        );
-                    },
-                    cancellationToken: _decreasingVolumeCancellationTokenSource.Token);
+
+                DOTween.To(result => decreasingVolumeSource.volume = result, decreasingVolumeSource.volume, 0,
+                        changeTime)
+                    .WithCancellation(_decreasingVolumeCancellationTokenSource.Token)
+                    .SuppressCancellationThrow();
             }
 
             increasingVolumeSource.Stop();
@@ -119,14 +115,12 @@ namespace UniversalUnity.Helpers.AudioManager
             increasingVolumeSource.clip = clip;
             increasingVolumeSource.Play();
 
-            await CurveAnimationHelper.LerpFloatByCurve
-            (
-                result => increasingVolumeSource.volume = result,
-                0,
-                PlayerPrefsManager.GetSavedVolumeForSource(SourceType),
-                timeOrSpeed: changeTime,
-                cancellationToken: _decreasingVolumeCancellationTokenSource.Token
-            );
+            await DOTween.To(result => increasingVolumeSource.volume = result, 
+                    0, 
+                    PlayerPrefsManager.GetSavedVolumeForSource(SourceType),
+                    changeTime)
+                .WithCancellation(_increasingVolumeCancellationTokenSource.Token)
+                .SuppressCancellationThrow();
         }
 
         private async UniTask StopPlayingSmoothProcess(float stopTime)
@@ -134,19 +128,19 @@ namespace UniversalUnity.Helpers.AudioManager
             var decreasingVolumeSource = _activeSource;
             if (decreasingVolumeSource.isPlaying)
             {
-                _decreasingVolumeCancellationTokenSource.Cancel();
+                _decreasingVolumeCancellationTokenSource?.Cancel();
                 _decreasingVolumeCancellationTokenSource = new CancellationTokenSource();
 
                 if (decreasingVolumeSource.clip == null) return;
-                await CurveAnimationHelper.LerpFloatByCurve
-                (
-                    result => decreasingVolumeSource.volume = result,
-                    decreasingVolumeSource.volume,
-                    0,
-                    timeOrSpeed: stopTime,
-                    onDone: () => { decreasingVolumeSource.Stop(); },
-                    cancellationToken: _decreasingVolumeCancellationTokenSource.Token
-                );
+                
+                await DOTween.To(result => decreasingVolumeSource.volume = result, 
+                        decreasingVolumeSource.volume, 
+                        0,
+                        stopTime)
+                    .WithCancellation(_decreasingVolumeCancellationTokenSource.Token)
+                    .SuppressCancellationThrow();
+                
+                decreasingVolumeSource.Stop();
             }
         }
 

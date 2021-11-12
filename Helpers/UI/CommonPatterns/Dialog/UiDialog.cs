@@ -1,50 +1,39 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UniversalUnity.Helpers.UI.BaseUiElements;
+using UnityEngine.UI;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
 {
     public class UiDialog : BaseUiElement
     {
         [Header("Dialog Fields")]
-        [SerializeField] public BaseUiElement dialog;
         [SerializeField] protected BaseTextUiElement headerTextElement;
         [SerializeField] protected BaseTextUiElement messageTextElement;
         [SerializeField] protected BaseInteractableUiElement acceptButton;
         [SerializeField] protected BaseInteractableUiElement declineButton;
-        [SerializeField] protected BaseInteractableUiElement backgroundButton;
-
+        
         public async UniTask ChangeText(string text)
         {
-            dialog.Enable().Forget();
+            Enable().Forget();
             await messageTextElement.ShowText(text);
         }
         
         public async UniTask ChangeHeaderText(string text)
         {
-            dialog.Enable().Forget();
+            Enable().Forget();
             await headerTextElement.ShowText(text);
         }
 
-        public async UniTask EnableBackground(bool enable)
+        public void SetAcceptButton(bool enable)
         {
-            await backgroundButton.Enable(enable);
+            acceptButton.ForceEnable(enable);
         }
         
-        public async UniTask EnableDialog(bool enable)
+        public void SetDeclineButton(bool enable)
         {
-            await dialog.Enable(enable);
-        }
-
-        public async UniTask EnableAcceptButton(bool enable)
-        {
-            await acceptButton.Enable(enable);
-        }
-        
-        public async UniTask EnableDeclineButton(bool enable)
-        {
-            await declineButton.Enable(enable);
+            declineButton.ForceEnable(enable);
         }
         
         public void SetHeaderText(string text)
@@ -56,15 +45,15 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         {
             messageTextElement.Text = text;
         }
-        
-        public void AddBackgroundAction(Action action)
-        {
-            backgroundButton.OnClick += action.Invoke;
-        }
 
-        public void RemoveBackgroundAction(Action action)
+        public void SetAcceptButtonText(string text)
         {
-            backgroundButton.OnClick -= action.Invoke;
+            acceptButton.GetComponent<Text>().text = text;
+        }
+        
+        public void SetDeclineButtonText(string text)
+        {
+            declineButton.GetComponent<Text>().text = text;
         }
 
         public void AddAcceptAction(Action action)
@@ -89,9 +78,24 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
         
         public void ClearActions()
         {
-            declineButton.ClearOnClickEvents();
-            acceptButton.ClearOnClickEvents();
-            backgroundButton.ClearOnClickEvents();
+            declineButton?.ClearOnClickEvents();
+            acceptButton?.ClearOnClickEvents();
+        }
+        
+        public UiDialog Instantiate(Transform parent = null)
+        {
+            var dialogInstance = Instantiate(this, parent);
+
+            dialogInstance.AddAcceptAction(
+                () =>
+                {
+                    dialogInstance
+                        .Disable()
+                        .ContinueWith(() => Destroy(dialogInstance));
+                });
+            
+            dialogInstance.Enable().Forget();
+            return dialogInstance;
         }
     }
 }

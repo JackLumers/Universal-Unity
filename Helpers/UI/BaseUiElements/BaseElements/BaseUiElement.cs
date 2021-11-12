@@ -1,15 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
-using UniversalUnity.Helpers.Tweeks.CurveAnimationHelper;
 
-namespace UniversalUnity.Helpers.UI.BaseUiElements
+namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
 {
     /// <summary>
     /// Base class for all UI elements.
@@ -21,22 +20,23 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
         protected CanvasGroup CanvasGroup;
 
         [SerializeField]
-        private float defaultEnableAnimationTime = 0.5f;
+        private float defaultEnableAnimationTime = 0.25f;
         
         private CancellationTokenSource _enableCancellationTokenSource = new CancellationTokenSource();
         private CancellationTokenSource _disableCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _movingCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _alphaChangeCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _rotationCancellationTokenSource = new CancellationTokenSource();
-        private CancellationTokenSource _scalingCancellationTokenSource = new CancellationTokenSource();
-        
+
         protected bool IsInitialized { get; private set; }
 
         public bool IsEnabled { get; protected set; }
         
         public bool WasEnabled { get; protected set; }
 
-        public float EnableAnimationTime { get; set; } = 0.5f;
+        public float EnableAnimationTime { get; set; } = 0.25f;
+        
+        public event Action OnEnableCalled;
+        public event Action OnDisableCalled;
+        public event Action OnEnabled;
+        public event Action OnDisabled;
         
         private void Awake()
         {
@@ -64,8 +64,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
                 
                 InheritInitComponents();
 
-                if (!calledByEnable && !WasEnabled && CanvasGroup.alpha > 0.99 && gameObject.activeInHierarchy) 
-                    Enable().Forget();
+                /*if (!calledByEnable && !WasEnabled && CanvasGroup.alpha > 0.99 && gameObject.activeInHierarchy) 
+                    Enable().Forget();*/
             }
             else
             {
@@ -199,6 +199,8 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             {
                 InitComponents(true);
             }
+            
+            OnEnableCalled?.Invoke();
 
             _disableCancellationTokenSource.Cancel();
             _enableCancellationTokenSource.Cancel();
@@ -216,15 +218,15 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             gameObject.SetActive(true);
             if (forceEnableInput) InteractionBlock("Disabled", false, true);
             IsEnabled = true;
-            
-            var task = CanvasGroup
+
+            await CanvasGroup
                 .DOFade(1, EnableAnimationTime)
-                .WithCancellation(_enableCancellationTokenSource.Token);
-            await task;
+                .WithCancellation(_enableCancellationTokenSource.Token)
+                .SuppressCancellationThrow();
 
             if (!_enableCancellationTokenSource.IsCancellationRequested)
             {
-                OnEnableComplete();
+                OnEnableAnimationComplete();
             }
         }
 
@@ -237,22 +239,25 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             {
                 return;
             }
-            
+
             if (!IsInitialized) InitComponents();
             if (forceDisableInput) InteractionBlock("Disabled", true, true);
             IsEnabled = false;
             
+            OnDisableCalled?.Invoke();
+            
             _enableCancellationTokenSource.Cancel();
             _disableCancellationTokenSource.Cancel();
             _disableCancellationTokenSource = new CancellationTokenSource();
-            var task = CanvasGroup
+            
+            await CanvasGroup
                 .DOFade(0, EnableAnimationTime)
-                .WithCancellation(_disableCancellationTokenSource.Token);
-            await task;
+                .WithCancellation(_disableCancellationTokenSource.Token)
+                .SuppressCancellationThrow();
             
             if (!_disableCancellationTokenSource.IsCancellationRequested)
             {
-                OnDisableComplete();
+                OnDisableAnimationComplete();
             }
         }
 
@@ -264,6 +269,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             IsEnabled = false;
             CanvasGroup.alpha = 0;
             gameObject.SetActive(false);
+            OnDisableAnimationComplete();
         }
 
         public void ForceEnable()
@@ -283,64 +289,24 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements
             InteractionBlock("Disabled", false, true);
             IsEnabled = true;
             CanvasGroup.alpha = 1;
+            OnEnableAnimationComplete();
         }
         
-        protected virtual void OnEnableComplete()
+        protected virtual void OnEnableAnimationComplete()
         {
-            LogHelper.LogInfo("Enabled!", nameof(OnDisableComplete));
+            LogHelper.LogInfo("Enabled!", nameof(OnEnableAnimationComplete));
             InteractionBlock("Disabled", false, true);
+            OnEnabled?.Invoke();
         }
 
-        protected virtual void OnDisableComplete()
+        protected virtual void OnDisableAnimationComplete()
         {
-            LogHelper.LogInfo("Disabled!", nameof(OnDisableComplete));
+            LogHelper.LogInfo("Disabled!", nameof(OnDisableAnimationComplete));
             gameObject.SetActive(false);
             InteractionBlock("Disabled", true, true);
+            OnDisabled?.Invoke();
         }
 
-        public async UniTask Move(Vector3 targetLocalPosition, float timeOrSpeed, bool fixedTime, [CanBeNull] AnimationCurve curve)
-        {
-            _movingCancellationTokenSource.Cancel();
-            _movingCancellationTokenSource = new CancellationTokenSource();
-            await CurveAnimationHelper.MoveAnchored((RectTransform) transform, targetLocalPosition,
-                speedOrTime: timeOrSpeed,
-                fixedTime: fixedTime, curve: curve, cancellationToken: _movingCancellationTokenSource.Token);
-        }
-
-        public async UniTask Rotate(Quaternion targetLocalRotation, float timeOrSpeed, bool fixedTime)
-        {
-            _rotationCancellationTokenSource.Cancel();
-            _rotationCancellationTokenSource = new CancellationTokenSource();
-
-            await CurveAnimationHelper.Rotate(transform, targetLocalRotation, speedOrTime: timeOrSpeed,
-                fixedTime: fixedTime, cancellationToken: _rotationCancellationTokenSource.Token);
-        }
-
-        public async UniTask Scale(Vector3 targetLocalScale, float timeOrSpeed, bool fixedTime)
-        {
-            _scalingCancellationTokenSource.Cancel();
-            _scalingCancellationTokenSource = new CancellationTokenSource();
-            
-            await CurveAnimationHelper.Scale(transform, targetLocalScale, speedOrTime: timeOrSpeed,
-                fixedTime: fixedTime, cancellationToken: _scalingCancellationTokenSource.Token);
-        }
-
-        public async UniTask ChangeAlpha(float targetAlpha, float timeInSeconds)
-        {
-            _alphaChangeCancellationTokenSource.Cancel();
-            _alphaChangeCancellationTokenSource = new CancellationTokenSource();
-            
-            await CurveAnimationHelper.LerpFloatByCurve
-            (
-                result => CanvasGroup.alpha = result,
-                CanvasGroup.alpha,
-                targetAlpha,
-                timeOrSpeed: timeInSeconds,
-                fixedTime: true,
-                cancellationToken: _alphaChangeCancellationTokenSource.Token
-            );
-        }
-        
         public void SetAlphaImmediately(float targetAlpha)
         {
             if (!IsInitialized) InitComponents();

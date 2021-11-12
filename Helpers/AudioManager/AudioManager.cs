@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UniversalUnity.Helpers.MonoBehaviourExtenders;
+using UniversalUnity.Helpers.Utils;
 
 namespace UniversalUnity.Helpers.AudioManager
 {
@@ -41,6 +42,9 @@ namespace UniversalUnity.Helpers.AudioManager
                 throw new NullReferenceException("[AudioManager] You must add persistent reference for audioMixer!");
             }
 
+            Instance.ChangeVolume("Music",Convert.ToInt32(PlayerPrefsManager.SavedMusicVolume));
+            Instance.ChangeVolume("Sounds",Convert.ToInt32(PlayerPrefsManager.SavedSoundEffectsVolume));
+            
             AudioSources.Add(EAudioSource.UiElementResponse, uiElementsResponseSource);
 
             try

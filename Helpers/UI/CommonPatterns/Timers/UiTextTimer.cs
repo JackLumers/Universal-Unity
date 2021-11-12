@@ -3,7 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UniversalUnity.Helpers.Logs;
-using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 {
@@ -14,23 +14,18 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
         public bool animateNumberChanging = true;
         public string timeFormat = @"mm\:ss";
 
-        protected CancellationTokenSource TimerCancellationTokenSource = new CancellationTokenSource();
-        
         protected override void InheritAwake()
         {
             timerText.Text = new TimeSpan(0).ToString(timeFormat);
         }
-
-        protected override async UniTask UiHandleTimer(float durationInMillis)
+        
+        protected override async UniTask UiHandleTimer(float durationInMillis, CancellationToken cancellationToken)
         {
-            Enable().Forget();
             timerText.Enable().Forget();
 
-            TimerCancellationTokenSource.Cancel();
-            TimerCancellationTokenSource = new CancellationTokenSource();
-            
             timerText.Text = TimeSpan.FromMilliseconds(durationInMillis).ToString(timeFormat);
-            await TimerProcess(durationInMillis - durationInMillis % 1000, TimerCancellationTokenSource.Token);
+            await TimerProcess(durationInMillis - durationInMillis % 1000, cancellationToken)
+                .SuppressCancellationThrow();
         }
         
         protected virtual async UniTask TimerProcess(float timerStartMillis, CancellationToken cancellationToken)
@@ -50,10 +45,9 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Timers
 
                 if (animateNumberChanging)
                 {
-                    var millis = timerStartMillis;
-                    UniTask.Run(() =>
-                            timerText.ShowText(TimeSpan.FromMilliseconds(millis).ToString(timeFormat)),
-                        cancellationToken: cancellationToken);
+                    timerText.ShowText(TimeSpan.FromMilliseconds(timerStartMillis).ToString(timeFormat))
+                        .AttachExternalCancellation(cancellationToken)
+                        .Forget();
                 }
                 else
                 {

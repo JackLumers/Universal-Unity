@@ -33,7 +33,7 @@ namespace UniversalUnity.Helpers.MonoBehaviourExtenders
                 Debug.LogError ("There is no any " + typeof(T).Name + " GameObject in the scene. Returned null.");
                 return null;
             }
-            protected set => instance = value;
+            private set => instance = value;
         }
     
         // ReSharper disable once InconsistentNaming

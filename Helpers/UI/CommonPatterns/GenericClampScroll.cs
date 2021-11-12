@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 using UniversalUnity.Helpers.UI.BaseUiElements;
+using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 using UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns
@@ -30,8 +31,8 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns
 
         private void Awake()
         {
-            if (nextPageButton != null) nextPageButton.OnClick += () => Scroll(true);
-            if (previousPageButton != null) previousPageButton.OnClick += () => Scroll(false);
+            if (nextPageButton != null) nextPageButton.OnClick += () => Scroll(true).Forget();
+            if (previousPageButton != null) previousPageButton.OnClick += () => Scroll(false).Forget();
         }
 
         public void InitData(Dictionary<string, TElementData> data)
