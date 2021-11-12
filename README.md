@@ -5,11 +5,7 @@ Expect breaking API changes!
 [Russian fast-written doc for innner usage](https://docs.google.com/document/d/15KHWurD4m-SBTkwx2fv_B5KpM4ONifXPUAMkMnKCq7I/edit?usp=sharing)
 
 # Installing
-Install all dependencies and add to your Unity project as a submodule AFTER INSTALLING ALL DEPENDENCIES.
-
-Recommended path: Assets/UniversalUnity
-
-Later I'll release package as a Unity package.
+Install all dependencies and add to your Unity project by unity package from [Releases](https://github.com/JackLumers/Universal-Unity/releases/tag/Alpha) page.
 
 # Dependencies
 Unity packages:
