@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UniversalUnity.Helpers.ScriptableObjects;
 using UniversalUnity.Helpers.UI.CommonPatterns.Dialog;
 
 namespace Common.Helpers.ScriptableObjects.ScriptableElements

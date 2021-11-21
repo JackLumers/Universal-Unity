@@ -68,8 +68,7 @@ namespace UniversalUnity.Helpers.AudioManager
 
         public void ChangeVolume(string sourceName, float value)
         {
-           // Debug.Log("Music Volume: "+Mathf.Log(value) * 20);
-            audioMixer.SetFloat(sourceName, value); //Mathf.Log(value) * 20);
+            audioMixer.SetFloat(sourceName, value);
         }
 
         public ManagedAudioSource GetSource(EAudioSource sourceType)

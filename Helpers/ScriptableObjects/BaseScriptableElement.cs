@@ -1,9 +1,9 @@
 ﻿using System;
+using Common.Helpers.ScriptableObjects;
 using Cysharp.Threading.Tasks;
-using UniversalUnity.Helpers.UI.BaseUiElements;
 using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
-namespace Common.Helpers.ScriptableObjects
+namespace UniversalUnity.Helpers.ScriptableObjects
 {
     public abstract class BaseScriptableElement<T> : ScriptablePrefabInstance<T> where T: BaseUiElement
     {
