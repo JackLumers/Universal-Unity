@@ -1,51 +1,76 @@
 ﻿using System;
 using UnityEngine;
+using UniversalUnity.Helpers.Localization.Enums;
 
 namespace UniversalUnity.Helpers.Utils
 {
     public static class PlayerPrefsManager
     {
-        private const string TextLanguage = "TextLanguage";
-        private const string VoiceLanguage = "VoiceLanguage";
-        private const string MusicVolume = "MusicVolume";
-        private const string SoundEffectsVolume = "SoundEffectsVolume";
-        private const string VoiceVolume = "VoiceVolume";
-        private const string NotificationEnable = "NotificationEnable";
+        private const string TEXT_LANGUAGE = "TextLanguage";
+        private const string VOICE_LANGUAGE = "VoiceLanguage";
+        private const string MUSIC_VOLUME = "MusicVolume";
+        private const string SOUND_EFFECTS_VOLUME = "SoundEffectsVolume";
+        private const string VOICE_VOLUME = "VoiceVolume";
+        private const string NOTIFICATION_ENABLE = "NotificationEnable";
 
         public static string SavedTextLanguage
         {
-            get => PlayerPrefs.GetString(TextLanguage, string.Empty);
-            set => PlayerPrefs.SetString(TextLanguage, value);
+            get => PlayerPrefs.GetString(TEXT_LANGUAGE, ETextLanguage.Undefined.ToString());
+            set
+            {
+                PlayerPrefs.SetString(TEXT_LANGUAGE, value);
+                PlayerPrefs.Save();
+            }
         }
-        
+
         public static string SavedVoiceLanguage
         {
-            get => PlayerPrefs.GetString(VoiceLanguage, string.Empty);
-            set => PlayerPrefs.SetString(VoiceLanguage, value);
+            get => PlayerPrefs.GetString(VOICE_LANGUAGE, EVoiceLanguage.Undefined.ToString());
+            set
+            {
+                PlayerPrefs.SetString(VOICE_LANGUAGE, value);
+                PlayerPrefs.Save();
+            }
         }
-        
+
         public static int SavedMusicVolume
         {
-            get => PlayerPrefs.GetInt(MusicVolume, 1);
-            set => PlayerPrefs.SetInt(MusicVolume, value);
+            get => PlayerPrefs.GetInt(MUSIC_VOLUME, 1);
+            set
+            {
+                PlayerPrefs.SetInt(MUSIC_VOLUME, value);
+                PlayerPrefs.Save();
+            }
         }
-        
+
         public static int SavedSoundEffectsVolume
         {
-            get => PlayerPrefs.GetInt(SoundEffectsVolume, 1);
-            set => PlayerPrefs.SetInt(SoundEffectsVolume, value);
+            get => PlayerPrefs.GetInt(SOUND_EFFECTS_VOLUME, 1);
+            set
+            {
+                PlayerPrefs.SetInt(SOUND_EFFECTS_VOLUME, value);
+                PlayerPrefs.Save();
+            }
         }
 
         public static int SavedNotificationEnable
         {
-            get => PlayerPrefs.GetInt(NotificationEnable, 1);
-            set => PlayerPrefs.SetInt(NotificationEnable, value);
+            get => PlayerPrefs.GetInt(NOTIFICATION_ENABLE, 1);
+            set
+            {
+                PlayerPrefs.SetInt(NOTIFICATION_ENABLE, value);
+                PlayerPrefs.Save();
+            }
         }
-        
+
         public static float SavedVoiceVolume
         {
-            get => PlayerPrefs.GetFloat(VoiceVolume, 0.9f);
-            set => PlayerPrefs.SetFloat(VoiceVolume, value);
+            get => PlayerPrefs.GetFloat(VOICE_VOLUME, 0.9f);
+            set
+            {
+                PlayerPrefs.SetFloat(VOICE_VOLUME, value);
+                PlayerPrefs.Save();
+            }
         }
 
         public static float GetSavedVolumeForSource(AudioManager.AudioManager.EAudioSource sourceType)

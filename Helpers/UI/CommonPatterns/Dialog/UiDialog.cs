@@ -48,12 +48,12 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.Dialog
 
         public void SetAcceptButtonText(string text)
         {
-            acceptButton.GetComponent<Text>().text = text;
+            acceptButton.GetComponentInChildren<Text>().text = text;
         }
         
         public void SetDeclineButtonText(string text)
         {
-            declineButton.GetComponent<Text>().text = text;
+            declineButton.GetComponentInChildren<Text>().text = text;
         }
 
         public void AddAcceptAction(Action action)

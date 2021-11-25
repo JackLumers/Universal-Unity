@@ -6,6 +6,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UniversalUnity.Helpers.Extensions;
 using UniversalUnity.Helpers.Localization.Enums;
 using UniversalUnity.Helpers.Localization.UsingFileHelpers;
+using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.Parsing.UsingFileHelpers;
 using UniversalUnity.Helpers.Utils;
 using CsvParser = UniversalUnity.Helpers.Parsing.UsingFileHelpers.CsvParser;
@@ -22,9 +23,6 @@ namespace UniversalUnity.Helpers.Localization
             new Dictionary<string, LightweightLocalizedEntityFactory.LocalizedLightweightEntity>();
         private static readonly List<AssetReference> LocalizationAssetReferences = new List<AssetReference>();
         
-        private static EVoiceLang _gameVoiceLang;
-        private static ETextLanguage _gameTextLanguage;
-
         /// <summary>
         /// key - asset reference from <see cref="LocalizationAssetReferences"/>;
         /// <para></para>
@@ -35,54 +33,72 @@ namespace UniversalUnity.Helpers.Localization
         public static bool IsParsed { get; private set; }
 
         public static event Action<ETextLanguage> OnTextLanguageChanged;
-        public static event Action<EVoiceLang> OnVoiceLanguageChanged;
+        public static event Action<EVoiceLanguage> OnVoiceLanguageChanged;
         public static event Action OnParsed;
 
         public static ETextLanguage GameTextLanguage
         {
             get
             {
-                if (_gameTextLanguage == ETextLanguage.Undefined)
+                var prefsString = PlayerPrefsManager.SavedTextLanguage;
+                if (prefsString == "Undefined")
                 {
-                    return Enum.TryParse(PlayerPrefsManager.SavedTextLanguage, out ETextLanguage language)
-                        ? language
-                        : ETextLanguage.Russian;
+                    return SystemLanguageParser.ParseText(Application.systemLanguage);
                 }
-                return _gameTextLanguage;
+                else
+                {
+                    if (Enum.TryParse(prefsString, true, out ETextLanguage language))
+                    {
+                        return language;
+                    }
+                    else
+                    {
+                        LogHelper.LogError($"Text language saved in players prefs not supported. Language in prefs: {prefsString}", nameof(GameTextLanguage));
+                        return SystemLanguageParser.ParseText(Application.systemLanguage);
+                    }
+                }
             }
             set
             {
                 Debug.Log($"[LocalizationManager.GameVoiceLang] Settled \"{value}\" text language for the game.");
-                _gameTextLanguage = value;
-                PlayerPrefs.SetString("language", _gameTextLanguage.ToString());
+                PlayerPrefsManager.SavedTextLanguage = value.ToString();
                 OnTextLanguageChanged?.Invoke(value);
             }
         }
 
-        public static EVoiceLang GameVoiceLang
+        public static EVoiceLanguage GameVoiceLanguage
         {
             get
             {
-                if (_gameTextLanguage == ETextLanguage.Undefined)
+                var prefsString = PlayerPrefsManager.SavedVoiceLanguage;
+                if (prefsString == "Undefined")
                 {
-                    return Enum.TryParse(PlayerPrefsManager.SavedVoiceLanguage, out EVoiceLang language)
-                        ? language
-                        : EVoiceLang.Russian;
+                    return SystemLanguageParser.ParseVoice(Application.systemLanguage);
                 }
-                return _gameVoiceLang;
+                else
+                {
+                    if (Enum.TryParse(prefsString, true, out EVoiceLanguage language))
+                    {
+                        return language;
+                    }
+                    else
+                    {
+                        LogHelper.LogError($"Voice language saved in players prefs not supported. Language in prefs: {prefsString}", nameof(GameTextLanguage));
+                        return SystemLanguageParser.ParseVoice(Application.systemLanguage);
+                    }
+                }
             }
             set
             {
                 Debug.Log($"[LocalizationManager.GameVoiceLang] Settled \"{value}\" voice language for the game.");
-                _gameVoiceLang = value;
-                PlayerPrefs.SetString("voiceLanguage", _gameVoiceLang.ToString());
+                PlayerPrefsManager.SavedVoiceLanguage = value.ToString();
                 OnVoiceLanguageChanged?.Invoke(value);
             }
         }
 
         public static string GetImageKey(string imageID)
         {
-            return string.Format("{0}_{1}", imageID,GameTextLanguage.ToString());
+            return $"{imageID}_{GameTextLanguage.ToString()}";
         }
 
         public static string GetText(string textId)
