@@ -30,7 +30,7 @@ namespace UniversalUnity.Helpers.MonoBehaviourExtenders
                     return instance;
                 }
 
-                Debug.LogError ("There is no any " + typeof(T).Name + " GameObject in the scene. Returned null.");
+                Debug.LogWarning("There is no any " + typeof(T).Name + " GameObject in the scene. Returned null.");
                 return null;
             }
             private set => instance = value;
@@ -63,7 +63,6 @@ namespace UniversalUnity.Helpers.MonoBehaviourExtenders
 
         private void OnApplicationQuit()
         {
-            Instance = null;
             InheritOnApplicationQuit();
         }
 

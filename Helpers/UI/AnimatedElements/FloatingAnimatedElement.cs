@@ -1,7 +1,7 @@
-﻿using System.Threading;
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
+using UniversalUnity.Helpers.Coroutines;
 
 namespace UniversalUnity.Helpers.UI.AnimatedElements
 {
@@ -44,16 +44,10 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
             ResetToInitialState();
         }
 
-        void OnDestroy()
-        {
-            AnimationCancellationTokenSource?.Cancel();
-            AnimationCancellationTokenSource?.Dispose();
-        }
-
         public override async UniTask StopAnimation()
         {
-            AnimationCancellationTokenSource?.Cancel();
-            AnimationCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+            AnimationCancellationTokenSource =
+                CancellationTokenExtension.CancelAndLinkToDestroy(AnimationCancellationTokenSource, this);
 
             await _rectTransform.DOAnchorPos(_startPosition, floatingOnePeriodTime / 2f)
                 .WithCancellation(AnimationCancellationTokenSource.Token);
@@ -61,8 +55,8 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
 
         public override async UniTaskVoid StartAnimation()
         {
-            AnimationCancellationTokenSource?.Cancel();
-            AnimationCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+            AnimationCancellationTokenSource =
+                CancellationTokenExtension.CancelAndLinkToDestroy(AnimationCancellationTokenSource, this);
 
             await _rectTransform.DOAnchorPos(_upPosition, floatingOnePeriodTime / 2f)
                 .WithCancellation(AnimationCancellationTokenSource.Token);
