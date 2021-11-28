@@ -12,9 +12,10 @@ namespace UniversalUnity.Helpers.Localization.Components
     {
         [Header("Short Name. Without lang prefix")]
         [SerializeField] private string imageId = null;
+        [SerializeField] private string suffixForMultiple;
 
         private Image _imageComponent;
-        private string _image;
+        private string _imageKey;
 
         AsyncOperationHandle handle;
 
@@ -33,12 +34,22 @@ namespace UniversalUnity.Helpers.Localization.Components
 
         private async void SetLocalizedImage()
         {
-            _image = LocalizationManager.GetImageKey(imageId);
-            Sprite sprite = await GetAsset<Sprite>(_image);
+            _imageKey = LocalizationManager.GetImageKey(imageId);
+            
+            Sprite sprite;
+            if (!string.IsNullOrEmpty(suffixForMultiple))
+            {
+                sprite = await GetAsset<Sprite>($"{_imageKey}[{suffixForMultiple}]");
+            }
+            else
+            {
+                sprite = await GetAsset<Sprite>(_imageKey);
+            }
+            
 
             if (sprite != null)
             {
-                _imageComponent.sprite = await GetAsset<Sprite>(_image);
+                _imageComponent.sprite = await GetAsset<Sprite>(_imageKey);
             }
         }
 

@@ -75,11 +75,5 @@ namespace UniversalUnity.Helpers.Localization.Components
                 }
             }
         }
-
-        protected override void InheritOnDestroy()
-        {
-            base.InheritOnDestroy();
-            LocalizationManager.ReleaseAll();
-        }
     }
 }
