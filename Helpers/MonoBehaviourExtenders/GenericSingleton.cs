@@ -61,16 +61,6 @@ namespace UniversalUnity.Helpers.MonoBehaviourExtenders
             InheritOnDestroy();
         }
 
-        private void OnApplicationQuit()
-        {
-            InheritOnApplicationQuit();
-        }
-
-        protected virtual void InheritOnApplicationQuit()
-        {
-
-        }
-
         protected virtual void InheritAwake()
         {
             
