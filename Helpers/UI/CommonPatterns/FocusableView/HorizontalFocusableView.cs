@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using Common.UI.Swipe;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UniversalUnity.Helpers.Logs;
 using UniversalUnity.Helpers.UI.AnimatedElements;
-using UniversalUnity.Helpers.UI.BaseUiElements;
 using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
@@ -36,23 +33,7 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
         protected Vector3 SavedPosition;
 
         public Action<int> OnFocusChanged;
-        
-        [Header("=Swipe Element Fields=")]
-        [SerializeField] private bool canSwipe;
-        [SerializeField] [Range(0, 1f)] private float thresholdSwipe;
-        
-        private float _rangeForSwipe;
-        
-        private bool _isSwiped;
 
-        private float _startTouchPosX;
-        private float _endTouchPosX;
-
-        private float _lastFrameTouchPosX;
-        private float _currentTouchPosX;
-
-        private float _currentSwipeRange;
-        
         public int ElementsCount => elements.Length;
         
         /// <summary>
@@ -64,101 +45,6 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
         {
             ElementsAnimation[FocusedIndex].StartAnimation().Forget();
         }
-
-        #region Swipe
-
-        private void InitSwipe()
-        {
-            if (!canSwipe) return;
-
-            buttonLeft.OnPointerDownAction -= StartSwipe;
-            buttonLeft.OnPointerDownAction += StartSwipe;
-
-            buttonRight.OnPointerDownAction -= StartSwipe;
-            buttonRight.OnPointerDownAction += StartSwipe;
-
-            buttonLeft.OnPointerUpAction -= EndSwipe;
-            buttonLeft.OnPointerUpAction += EndSwipe;
-
-            buttonRight.OnPointerUpAction -= EndSwipe;
-            buttonRight.OnPointerUpAction += EndSwipe;
-
-            ElementsAnimation[FocusedIndex].StopAnimation();
-            _rangeForSwipe = ChildWidth * thresholdSwipe;
-        }
-
-        private void StartSwipe(PointerEventData data)
-        {
-            _startTouchPosX = data.position.x;
-            _currentTouchPosX = SavedPosition.x;
-            _lastFrameTouchPosX = data.position.x;
-            _currentSwipeRange = 0;
-            
-            _isSwiped = true;
-
-            ElementsAnimation[FocusedIndex].enabled = false;
-        }
-
-        private void EndSwipe(PointerEventData data)
-        {
-            if (!_isSwiped) return;
-            
-            _endTouchPosX = data.position.x;
-            _currentSwipeRange = 0;
-            _isSwiped = false;
-            
-            ControlSwipe();
-        }
-
-        private void ControlSwipe()
-        {
-            float currentRange = _startTouchPosX - _endTouchPosX;
-            if (currentRange == 0) return;
-
-            if (Math.Abs(currentRange) > _rangeForSwipe)
-            {
-                int index = 0;
-                float minDistance = Math.Abs(-_currentTouchPosX - ElementsRects[index].localPosition.x);
-                
-                for (int i = 1; i < elements.Length; i++)
-                {
-                    if (i == FocusedIndex) continue;
-                    if (minDistance < Math.Abs(-_currentTouchPosX - ElementsRects[i].localPosition.x) ||
-                        !CanFocus(currentRange > 0)) continue;
-
-                    index = i;
-                    minDistance = -_currentTouchPosX - ElementsRects[i].localPosition.x;
-                }
-
-                Focus(index).Forget();
-                _currentTouchPosX = SavedPosition.x;
-            }
-            else
-            {
-                Focus().Forget();
-                _currentTouchPosX = SavedPosition.x;
-            }
-        }
-
-        private void MoveSwipe()
-        {
-            _currentSwipeRange = 
-                SwipingController.Instance.playerActions.UI.ClickPostion.ReadValue<Vector2>().x - _lastFrameTouchPosX;
-
-            _currentTouchPosX += _currentSwipeRange;
-            
-            content.localPosition = 
-                Vector2.Lerp(content.localPosition, new Vector2(_currentTouchPosX, 0), focusSpeed);
-
-            _lastFrameTouchPosX = SwipingController.Instance.playerActions.UI.ClickPostion.ReadValue<Vector2>().x;
-        }
-
-        private void Update()
-        {
-            if (_isSwiped) MoveSwipe();
-        }
-
-        #endregion
 
         private void UpdateFocus(int focusIndex)
         {
@@ -228,12 +114,10 @@ namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
             buttonRight.OnClick += () => {ProcessNavigationClick(true);};
             
             UpdateButtonsState();
-            InitSwipe();
         }
 
         private void ProcessNavigationClick(bool right)
         {
-            if(_currentSwipeRange > 10) return;
             Focus(right).Forget();
         }
         

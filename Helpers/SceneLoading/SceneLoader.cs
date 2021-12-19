@@ -12,14 +12,14 @@ namespace UniversalUnity.Helpers.SceneLoading
     {
         [SerializeField] private LoadingScreen loadingScreen = null;
 
-        public static Action<ESceneName, LoadSceneMode> OnSceneLoadingStarted;
-        public static Action<ESceneName, LoadSceneMode> OnSceneLoadingEnded;
+        public static Action<ESceneName, LoadSceneMode> sceneLoadingStarted;
+        public static Action<ESceneName, LoadSceneMode> sceneLoadingEnded;
 
         private CancellationTokenSource _loadingCancellationTokenSource;
 
         protected override void InheritAwake()
         {
-            OnSceneLoadingEnded += (scene, mode) =>
+            sceneLoadingEnded += (scene, mode) =>
             {
                 loadingScreen.Disable().Forget();
             };
@@ -44,10 +44,10 @@ namespace UniversalUnity.Helpers.SceneLoading
 
         private async UniTask LoadProcess(ESceneName sceneName, LoadSceneMode loadSceneMode)
         {
-            OnSceneLoadingStarted?.Invoke(sceneName, loadSceneMode);
+            sceneLoadingStarted?.Invoke(sceneName, loadSceneMode);
             await SceneManager.LoadSceneAsync(sceneName.ToString(), loadSceneMode)
                 .WithCancellation(_loadingCancellationTokenSource.Token);
-            OnSceneLoadingEnded?.Invoke(sceneName, loadSceneMode);
+            sceneLoadingEnded?.Invoke(sceneName, loadSceneMode);
         }
     }
 }

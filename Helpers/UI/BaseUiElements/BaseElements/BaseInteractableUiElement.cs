@@ -9,6 +9,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UniversalUnity.Helpers._ProjectDependent;
 using UniversalUnity.Helpers.Coroutines;
+using UniversalUnity.Helpers.UI.BaseUiElements.Interfaces;
 
 namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
 {
@@ -91,7 +92,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
         public Action<PointerEventData> OnPointerEnterAction { get; set; }
         public Action<PointerEventData> OnPointerExitAction { get; set; }
 
-        private Coroutine _pointingCoroutine;
+        private CancellationTokenSource _pointingCts;
 
         public void OnPointerClick(PointerEventData eventData)
         {
@@ -105,8 +106,9 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
             PointedDown = true;
             HoldTime = 0;
             Pointed = true;
+            
             PressedAnimation().Forget();
-            CoroutineHelper.RestartCoroutine(ref _pointingCoroutine, PointingProcess(eventData), this);
+            PointingProcess(eventData).Forget();
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -127,8 +129,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
             HoldTime = 0;
             Pointed = false;
             
-            
-            CoroutineHelper.StopCoroutine(ref _pointingCoroutine, this);
+            _pointingCts?.Cancel();
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -143,8 +144,10 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
             Pointed = true;
         }
 
-        private IEnumerator PointingProcess(PointerEventData pointerEventData)
-        {
+        private async UniTaskVoid PointingProcess(PointerEventData pointerEventData)
+        {           
+            _pointingCts.CancelAndLinkToDestroy(this);
+
             while (gameObject.activeInHierarchy)
             {
                 HoldTime += Time.deltaTime;
@@ -155,16 +158,16 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.BaseElements
                     {
                         OnHoldAction?.Invoke(pointerEventData);
                         HoldTime = 0;
-                        yield break;
+                        return;
                     }
                     else
                     {
                         OnHoldAndPointedAction?.Invoke(pointerEventData);
                         HoldTime = 0;
-                        yield break;
+                        return;
                     }
                 }
-                yield return new WaitForEndOfFrame();
+                await UniTask.Yield(PlayerLoopTiming.FixedUpdate);
             }
 
             HoldTime = 0;

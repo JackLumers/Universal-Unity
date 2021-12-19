@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine.EventSystems;
 
-namespace UniversalUnity.Helpers.UI.BaseUiElements
+namespace UniversalUnity.Helpers.UI.BaseUiElements.Interfaces
 {
     public interface IInputHandlerUi : IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler, IPointerEnterHandler
     {

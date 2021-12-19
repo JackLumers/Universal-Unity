@@ -45,7 +45,7 @@ namespace UniversalUnity.Helpers.Localization.Components
                 _sceneDependentLocalizations.Add(sceneDependentLocalization.sceneName, sceneDependentLocalization);
             }
             
-            SceneLoader.OnSceneLoadingStarted += (scene, loadMode) => AddInParseByScene(scene.ToString());
+            SceneLoader.sceneLoadingStarted += (scene, loadMode) => AddInParseByScene(scene.ToString());
             SceneManager.sceneUnloaded += (scene) => RemoveFromParseByScene(scene.name);
             LocalizationManager.OnTextLanguageChanged += (language) => LocalizationManager.StartParse();
             LocalizationManager.StartParse();

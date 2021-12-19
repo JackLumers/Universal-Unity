@@ -1,5 +1,4 @@
-﻿using UniversalUnity.Helpers.UI.BaseUiElements;
-using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
+﻿using UniversalUnity.Helpers.UI.BaseUiElements.BaseElements;
 
 namespace UniversalUnity.Helpers.UI.CommonPatterns.FocusableView
 {

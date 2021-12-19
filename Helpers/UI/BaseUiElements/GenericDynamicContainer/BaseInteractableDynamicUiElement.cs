@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Reflection;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
@@ -11,6 +10,7 @@ using UnityEngine.UI;
 using UniversalUnity.Helpers._ProjectDependent;
 using UniversalUnity.Helpers.Coroutines;
 using UniversalUnity.Helpers.Logs;
+using UniversalUnity.Helpers.UI.BaseUiElements.Interfaces;
 
 namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
 {
@@ -58,13 +58,11 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
         #endregion
 
         #region Public API
-
-        public delegate void OnClickHandler();
-
+        
         /// <summary>
         /// Event that is called when <see cref="PrivateClick"/> called after <see cref="ProtectedOnClick"/>.
         /// </summary>
-        public event OnClickHandler OnClick;
+        public event Action OnClick;
 
         /// <summary>
         /// Clears all method groups that is linked with the <see cref="OnClick"/> event.
@@ -90,7 +88,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
         public Action<PointerEventData> OnPointerEnterAction { get; set; }
         public Action<PointerEventData> OnPointerExitAction { get; set; }
 
-        private Coroutine _pointingCoroutine;
+        private CancellationTokenSource _pointingCts;
 
         public void OnPointerClick(PointerEventData eventData)
         {
@@ -106,8 +104,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             Pointed = true;
             
             PressedAnimation().Forget();
-            
-            CoroutineHelper.RestartCoroutine(ref _pointingCoroutine, PointingProcess(eventData), this);
+            PointingProcess(eventData).Forget();
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -128,7 +125,7 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             HoldTime = 0;
             Pointed = false;
             
-            CoroutineHelper.StopCoroutine(ref _pointingCoroutine, this);
+            _pointingCts?.Cancel();
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -143,9 +140,11 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
             Pointed = true;
         }
 
-        private IEnumerator PointingProcess(PointerEventData eventData)
+        private async UniTaskVoid PointingProcess(PointerEventData eventData)
         {
-            while (gameObject.activeInHierarchy)
+            _pointingCts.CancelAndLinkToDestroy(this);
+            
+            while (!_pointingCts.IsCancellationRequested)
             {
                 HoldTime += Time.deltaTime;
                 if (HoldTime >= Constants.HoldTimeBorder)
@@ -155,17 +154,17 @@ namespace UniversalUnity.Helpers.UI.BaseUiElements.GenericDynamicContainer
                     {
                         OnHoldAction?.Invoke(eventData);
                         HoldTime = 0;
-                        yield break;
+                        return;
                     }
                     else
                     {
                         OnHoldAction?.Invoke(eventData);
                         OnHoldAndPointedAction?.Invoke(eventData);
                         HoldTime = 0;
-                        yield break;
+                        return;
                     }
                 }
-                yield return new WaitForEndOfFrame();
+                await UniTask.Yield(PlayerLoopTiming.FixedUpdate);
             }
         }
 

@@ -46,8 +46,7 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
 
         public override async UniTask StopAnimation()
         {
-            AnimationCancellationTokenSource =
-                CancellationTokenExtension.CancelAndLinkToDestroy(AnimationCancellationTokenSource, this);
+            AnimationCancellationTokenSource.CancelAndLinkToDestroy(this);
 
             await _rectTransform.DOAnchorPos(_startPosition, floatingOnePeriodTime / 2f)
                 .WithCancellation(AnimationCancellationTokenSource.Token);
@@ -55,8 +54,7 @@ namespace UniversalUnity.Helpers.UI.AnimatedElements
 
         public override async UniTaskVoid StartAnimation()
         {
-            AnimationCancellationTokenSource =
-                CancellationTokenExtension.CancelAndLinkToDestroy(AnimationCancellationTokenSource, this);
+            AnimationCancellationTokenSource.CancelAndLinkToDestroy(this);
 
             await _rectTransform.DOAnchorPos(_upPosition, floatingOnePeriodTime / 2f)
                 .WithCancellation(AnimationCancellationTokenSource.Token);
