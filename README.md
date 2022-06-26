@@ -1,4 +1,6 @@
 # Universal-Unity
+OUT OF DATE. It's needs rework for many systems, I'll do it when I have time.
+
 Scripts for easyer game development in Unity. Not properly documented yet and also can depend on other frameworks, I'll work on that later.
 Expect breaking API changes!
 
